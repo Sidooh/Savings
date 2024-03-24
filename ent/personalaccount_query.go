@@ -4,8 +4,10 @@ package ent
 
 import (
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 	"Savings/ent/predicate"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -17,10 +19,11 @@ import (
 // PersonalAccountQuery is the builder for querying PersonalAccount entities.
 type PersonalAccountQuery struct {
 	config
-	ctx        *QueryContext
-	order      []personalaccount.OrderOption
-	inters     []Interceptor
-	predicates []predicate.PersonalAccount
+	ctx              *QueryContext
+	order            []personalaccount.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.PersonalAccount
+	withTransactions *PersonalAccountTransactionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -55,6 +58,28 @@ func (paq *PersonalAccountQuery) Unique(unique bool) *PersonalAccountQuery {
 func (paq *PersonalAccountQuery) Order(o ...personalaccount.OrderOption) *PersonalAccountQuery {
 	paq.order = append(paq.order, o...)
 	return paq
+}
+
+// QueryTransactions chains the current query on the "transactions" edge.
+func (paq *PersonalAccountQuery) QueryTransactions() *PersonalAccountTransactionQuery {
+	query := (&PersonalAccountTransactionClient{config: paq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := paq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := paq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(personalaccount.Table, personalaccount.FieldID, selector),
+			sqlgraph.To(personalaccounttransaction.Table, personalaccounttransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, personalaccount.TransactionsTable, personalaccount.TransactionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(paq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first PersonalAccount entity from the query.
@@ -244,15 +269,27 @@ func (paq *PersonalAccountQuery) Clone() *PersonalAccountQuery {
 		return nil
 	}
 	return &PersonalAccountQuery{
-		config:     paq.config,
-		ctx:        paq.ctx.Clone(),
-		order:      append([]personalaccount.OrderOption{}, paq.order...),
-		inters:     append([]Interceptor{}, paq.inters...),
-		predicates: append([]predicate.PersonalAccount{}, paq.predicates...),
+		config:           paq.config,
+		ctx:              paq.ctx.Clone(),
+		order:            append([]personalaccount.OrderOption{}, paq.order...),
+		inters:           append([]Interceptor{}, paq.inters...),
+		predicates:       append([]predicate.PersonalAccount{}, paq.predicates...),
+		withTransactions: paq.withTransactions.Clone(),
 		// clone intermediate query.
 		sql:  paq.sql.Clone(),
 		path: paq.path,
 	}
+}
+
+// WithTransactions tells the query-builder to eager-load the nodes that are connected to
+// the "transactions" edge. The optional arguments are used to configure the query builder of the edge.
+func (paq *PersonalAccountQuery) WithTransactions(opts ...func(*PersonalAccountTransactionQuery)) *PersonalAccountQuery {
+	query := (&PersonalAccountTransactionClient{config: paq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	paq.withTransactions = query
+	return paq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,8 +368,11 @@ func (paq *PersonalAccountQuery) prepareQuery(ctx context.Context) error {
 
 func (paq *PersonalAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PersonalAccount, error) {
 	var (
-		nodes = []*PersonalAccount{}
-		_spec = paq.querySpec()
+		nodes       = []*PersonalAccount{}
+		_spec       = paq.querySpec()
+		loadedTypes = [1]bool{
+			paq.withTransactions != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*PersonalAccount).scanValues(nil, columns)
@@ -340,6 +380,7 @@ func (paq *PersonalAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &PersonalAccount{config: paq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +392,48 @@ func (paq *PersonalAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := paq.withTransactions; query != nil {
+		if err := paq.loadTransactions(ctx, query, nodes,
+			func(n *PersonalAccount) { n.Edges.Transactions = []*PersonalAccountTransaction{} },
+			func(n *PersonalAccount, e *PersonalAccountTransaction) {
+				n.Edges.Transactions = append(n.Edges.Transactions, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (paq *PersonalAccountQuery) loadTransactions(ctx context.Context, query *PersonalAccountTransactionQuery, nodes []*PersonalAccount, init func(*PersonalAccount), assign func(*PersonalAccount, *PersonalAccountTransaction)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uint64]*PersonalAccount)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.PersonalAccountTransaction(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(personalaccount.TransactionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.personal_account_transactions
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "personal_account_transactions" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "personal_account_transactions" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (paq *PersonalAccountQuery) sqlCount(ctx context.Context) (int, error) {

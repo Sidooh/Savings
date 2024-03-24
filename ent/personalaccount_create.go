@@ -4,6 +4,7 @@ package ent
 
 import (
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 	"context"
 	"errors"
 	"fmt"
@@ -94,6 +95,21 @@ func (pac *PersonalAccountCreate) SetID(u uint64) *PersonalAccountCreate {
 	return pac
 }
 
+// AddTransactionIDs adds the "transactions" edge to the PersonalAccountTransaction entity by IDs.
+func (pac *PersonalAccountCreate) AddTransactionIDs(ids ...uint64) *PersonalAccountCreate {
+	pac.mutation.AddTransactionIDs(ids...)
+	return pac
+}
+
+// AddTransactions adds the "transactions" edges to the PersonalAccountTransaction entity.
+func (pac *PersonalAccountCreate) AddTransactions(p ...*PersonalAccountTransaction) *PersonalAccountCreate {
+	ids := make([]uint64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pac.AddTransactionIDs(ids...)
+}
+
 // Mutation returns the PersonalAccountMutation object of the builder.
 func (pac *PersonalAccountCreate) Mutation() *PersonalAccountMutation {
 	return pac.mutation
@@ -174,8 +190,18 @@ func (pac *PersonalAccountCreate) check() error {
 	if _, ok := pac.mutation.Balance(); !ok {
 		return &ValidationError{Name: "balance", err: errors.New(`ent: missing required field "PersonalAccount.balance"`)}
 	}
+	if v, ok := pac.mutation.Balance(); ok {
+		if err := personalaccount.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.balance": %w`, err)}
+		}
+	}
 	if _, ok := pac.mutation.Interest(); !ok {
 		return &ValidationError{Name: "interest", err: errors.New(`ent: missing required field "PersonalAccount.interest"`)}
+	}
+	if v, ok := pac.mutation.Interest(); ok {
+		if err := personalaccount.InterestValidator(v); err != nil {
+			return &ValidationError{Name: "interest", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.interest": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -232,6 +258,22 @@ func (pac *PersonalAccountCreate) createSpec() (*PersonalAccount, *sqlgraph.Crea
 	if value, ok := pac.mutation.Interest(); ok {
 		_spec.SetField(personalaccount.FieldInterest, field.TypeFloat32, value)
 		_node.Interest = value
+	}
+	if nodes := pac.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

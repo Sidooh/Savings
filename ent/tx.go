@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// PersonalAccount is the client for interacting with the PersonalAccount builders.
 	PersonalAccount *PersonalAccountClient
+	// PersonalAccountTransaction is the client for interacting with the PersonalAccountTransaction builders.
+	PersonalAccountTransaction *PersonalAccountTransactionClient
 
 	// lazily loaded.
 	client     *Client
@@ -146,6 +148,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.PersonalAccount = NewPersonalAccountClient(tx.config)
+	tx.PersonalAccountTransaction = NewPersonalAccountTransactionClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

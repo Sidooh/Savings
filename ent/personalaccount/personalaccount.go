@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -25,8 +26,17 @@ const (
 	FieldBalance = "balance"
 	// FieldInterest holds the string denoting the interest field in the database.
 	FieldInterest = "interest"
+	// EdgeTransactions holds the string denoting the transactions edge name in mutations.
+	EdgeTransactions = "transactions"
 	// Table holds the table name of the personalaccount in the database.
 	Table = "personal_accounts"
+	// TransactionsTable is the table that holds the transactions relation/edge.
+	TransactionsTable = "personal_account_transactions"
+	// TransactionsInverseTable is the table name for the PersonalAccountTransaction entity.
+	// It exists in this package in order to avoid circular dependency with the "personalaccounttransaction" package.
+	TransactionsInverseTable = "personal_account_transactions"
+	// TransactionsColumn is the table column denoting the transactions relation/edge.
+	TransactionsColumn = "personal_account_transactions"
 )
 
 // Columns holds all SQL columns for personalaccount fields.
@@ -63,8 +73,12 @@ var (
 	TypeValidator func(string) error
 	// DefaultBalance holds the default value on creation for the "balance" field.
 	DefaultBalance float32
+	// BalanceValidator is a validator for the "balance" field. It is called by the builders before save.
+	BalanceValidator func(float32) error
 	// DefaultInterest holds the default value on creation for the "interest" field.
 	DefaultInterest float32
+	// InterestValidator is a validator for the "interest" field. It is called by the builders before save.
+	InterestValidator func(float32) error
 )
 
 // OrderOption defines the ordering options for the PersonalAccount queries.
@@ -103,4 +117,25 @@ func ByBalance(opts ...sql.OrderTermOption) OrderOption {
 // ByInterest orders the results by the interest field.
 func ByInterest(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldInterest, opts...).ToFunc()
+}
+
+// ByTransactionsCount orders the results by transactions count.
+func ByTransactionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTransactionsStep(), opts...)
+	}
+}
+
+// ByTransactions orders the results by transactions terms.
+func ByTransactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTransactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newTransactionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TransactionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TransactionsTable, TransactionsColumn),
+	)
 }

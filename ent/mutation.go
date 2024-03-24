@@ -4,6 +4,7 @@ package ent
 
 import (
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 	"Savings/ent/predicate"
 	"context"
 	"errors"
@@ -24,28 +25,32 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypePersonalAccount = "PersonalAccount"
+	TypePersonalAccount            = "PersonalAccount"
+	TypePersonalAccountTransaction = "PersonalAccountTransaction"
 )
 
 // PersonalAccountMutation represents an operation that mutates the PersonalAccount nodes in the graph.
 type PersonalAccountMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uint64
-	created_at    *time.Time
-	updated_at    *time.Time
-	account_id    *uint64
-	addaccount_id *int64
-	_type         *string
-	balance       *float32
-	addbalance    *float32
-	interest      *float32
-	addinterest   *float32
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*PersonalAccount, error)
-	predicates    []predicate.PersonalAccount
+	op                  Op
+	typ                 string
+	id                  *uint64
+	created_at          *time.Time
+	updated_at          *time.Time
+	account_id          *uint64
+	addaccount_id       *int64
+	_type               *string
+	balance             *float32
+	addbalance          *float32
+	interest            *float32
+	addinterest         *float32
+	clearedFields       map[string]struct{}
+	transactions        map[uint64]struct{}
+	removedtransactions map[uint64]struct{}
+	clearedtransactions bool
+	done                bool
+	oldValue            func(context.Context) (*PersonalAccount, error)
+	predicates          []predicate.PersonalAccount
 }
 
 var _ ent.Mutation = (*PersonalAccountMutation)(nil)
@@ -428,6 +433,60 @@ func (m *PersonalAccountMutation) ResetInterest() {
 	m.addinterest = nil
 }
 
+// AddTransactionIDs adds the "transactions" edge to the PersonalAccountTransaction entity by ids.
+func (m *PersonalAccountMutation) AddTransactionIDs(ids ...uint64) {
+	if m.transactions == nil {
+		m.transactions = make(map[uint64]struct{})
+	}
+	for i := range ids {
+		m.transactions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTransactions clears the "transactions" edge to the PersonalAccountTransaction entity.
+func (m *PersonalAccountMutation) ClearTransactions() {
+	m.clearedtransactions = true
+}
+
+// TransactionsCleared reports if the "transactions" edge to the PersonalAccountTransaction entity was cleared.
+func (m *PersonalAccountMutation) TransactionsCleared() bool {
+	return m.clearedtransactions
+}
+
+// RemoveTransactionIDs removes the "transactions" edge to the PersonalAccountTransaction entity by IDs.
+func (m *PersonalAccountMutation) RemoveTransactionIDs(ids ...uint64) {
+	if m.removedtransactions == nil {
+		m.removedtransactions = make(map[uint64]struct{})
+	}
+	for i := range ids {
+		delete(m.transactions, ids[i])
+		m.removedtransactions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTransactions returns the removed IDs of the "transactions" edge to the PersonalAccountTransaction entity.
+func (m *PersonalAccountMutation) RemovedTransactionsIDs() (ids []uint64) {
+	for id := range m.removedtransactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TransactionsIDs returns the "transactions" edge IDs in the mutation.
+func (m *PersonalAccountMutation) TransactionsIDs() (ids []uint64) {
+	for id := range m.transactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTransactions resets all changes to the "transactions" edge.
+func (m *PersonalAccountMutation) ResetTransactions() {
+	m.transactions = nil
+	m.clearedtransactions = false
+	m.removedtransactions = nil
+}
+
 // Where appends a list predicates to the PersonalAccountMutation builder.
 func (m *PersonalAccountMutation) Where(ps ...predicate.PersonalAccount) {
 	m.predicates = append(m.predicates, ps...)
@@ -685,48 +744,822 @@ func (m *PersonalAccountMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PersonalAccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.transactions != nil {
+		edges = append(edges, personalaccount.EdgeTransactions)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *PersonalAccountMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case personalaccount.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.transactions))
+		for id := range m.transactions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PersonalAccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedtransactions != nil {
+		edges = append(edges, personalaccount.EdgeTransactions)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *PersonalAccountMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case personalaccount.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.removedtransactions))
+		for id := range m.removedtransactions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PersonalAccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedtransactions {
+		edges = append(edges, personalaccount.EdgeTransactions)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *PersonalAccountMutation) EdgeCleared(name string) bool {
+	switch name {
+	case personalaccount.EdgeTransactions:
+		return m.clearedtransactions
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *PersonalAccountMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown PersonalAccount unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *PersonalAccountMutation) ResetEdge(name string) error {
+	switch name {
+	case personalaccount.EdgeTransactions:
+		m.ResetTransactions()
+		return nil
+	}
 	return fmt.Errorf("unknown PersonalAccount edge %s", name)
+}
+
+// PersonalAccountTransactionMutation represents an operation that mutates the PersonalAccountTransaction nodes in the graph.
+type PersonalAccountTransactionMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *uint64
+	created_at             *time.Time
+	updated_at             *time.Time
+	personal_account_id    *uint64
+	addpersonal_account_id *int64
+	_type                  *string
+	amount                 *float32
+	addamount              *float32
+	status                 *string
+	clearedFields          map[string]struct{}
+	account                *uint64
+	clearedaccount         bool
+	done                   bool
+	oldValue               func(context.Context) (*PersonalAccountTransaction, error)
+	predicates             []predicate.PersonalAccountTransaction
+}
+
+var _ ent.Mutation = (*PersonalAccountTransactionMutation)(nil)
+
+// personalaccounttransactionOption allows management of the mutation configuration using functional options.
+type personalaccounttransactionOption func(*PersonalAccountTransactionMutation)
+
+// newPersonalAccountTransactionMutation creates new mutation for the PersonalAccountTransaction entity.
+func newPersonalAccountTransactionMutation(c config, op Op, opts ...personalaccounttransactionOption) *PersonalAccountTransactionMutation {
+	m := &PersonalAccountTransactionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypePersonalAccountTransaction,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withPersonalAccountTransactionID sets the ID field of the mutation.
+func withPersonalAccountTransactionID(id uint64) personalaccounttransactionOption {
+	return func(m *PersonalAccountTransactionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *PersonalAccountTransaction
+		)
+		m.oldValue = func(ctx context.Context) (*PersonalAccountTransaction, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().PersonalAccountTransaction.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withPersonalAccountTransaction sets the old PersonalAccountTransaction of the mutation.
+func withPersonalAccountTransaction(node *PersonalAccountTransaction) personalaccounttransactionOption {
+	return func(m *PersonalAccountTransactionMutation) {
+		m.oldValue = func(context.Context) (*PersonalAccountTransaction, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m PersonalAccountTransactionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m PersonalAccountTransactionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of PersonalAccountTransaction entities.
+func (m *PersonalAccountTransactionMutation) SetID(id uint64) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *PersonalAccountTransactionMutation) ID() (id uint64, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *PersonalAccountTransactionMutation) IDs(ctx context.Context) ([]uint64, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uint64{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().PersonalAccountTransaction.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *PersonalAccountTransactionMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *PersonalAccountTransactionMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *PersonalAccountTransactionMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *PersonalAccountTransactionMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *PersonalAccountTransactionMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *PersonalAccountTransactionMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetPersonalAccountID sets the "personal_account_id" field.
+func (m *PersonalAccountTransactionMutation) SetPersonalAccountID(u uint64) {
+	m.personal_account_id = &u
+	m.addpersonal_account_id = nil
+}
+
+// PersonalAccountID returns the value of the "personal_account_id" field in the mutation.
+func (m *PersonalAccountTransactionMutation) PersonalAccountID() (r uint64, exists bool) {
+	v := m.personal_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPersonalAccountID returns the old "personal_account_id" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldPersonalAccountID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPersonalAccountID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPersonalAccountID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPersonalAccountID: %w", err)
+	}
+	return oldValue.PersonalAccountID, nil
+}
+
+// AddPersonalAccountID adds u to the "personal_account_id" field.
+func (m *PersonalAccountTransactionMutation) AddPersonalAccountID(u int64) {
+	if m.addpersonal_account_id != nil {
+		*m.addpersonal_account_id += u
+	} else {
+		m.addpersonal_account_id = &u
+	}
+}
+
+// AddedPersonalAccountID returns the value that was added to the "personal_account_id" field in this mutation.
+func (m *PersonalAccountTransactionMutation) AddedPersonalAccountID() (r int64, exists bool) {
+	v := m.addpersonal_account_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPersonalAccountID resets all changes to the "personal_account_id" field.
+func (m *PersonalAccountTransactionMutation) ResetPersonalAccountID() {
+	m.personal_account_id = nil
+	m.addpersonal_account_id = nil
+}
+
+// SetType sets the "type" field.
+func (m *PersonalAccountTransactionMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *PersonalAccountTransactionMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *PersonalAccountTransactionMutation) ResetType() {
+	m._type = nil
+}
+
+// SetAmount sets the "amount" field.
+func (m *PersonalAccountTransactionMutation) SetAmount(f float32) {
+	m.amount = &f
+	m.addamount = nil
+}
+
+// Amount returns the value of the "amount" field in the mutation.
+func (m *PersonalAccountTransactionMutation) Amount() (r float32, exists bool) {
+	v := m.amount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAmount returns the old "amount" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldAmount(ctx context.Context) (v float32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAmount is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAmount requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAmount: %w", err)
+	}
+	return oldValue.Amount, nil
+}
+
+// AddAmount adds f to the "amount" field.
+func (m *PersonalAccountTransactionMutation) AddAmount(f float32) {
+	if m.addamount != nil {
+		*m.addamount += f
+	} else {
+		m.addamount = &f
+	}
+}
+
+// AddedAmount returns the value that was added to the "amount" field in this mutation.
+func (m *PersonalAccountTransactionMutation) AddedAmount() (r float32, exists bool) {
+	v := m.addamount
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetAmount resets all changes to the "amount" field.
+func (m *PersonalAccountTransactionMutation) ResetAmount() {
+	m.amount = nil
+	m.addamount = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *PersonalAccountTransactionMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *PersonalAccountTransactionMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *PersonalAccountTransactionMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetAccountID sets the "account" edge to the PersonalAccount entity by id.
+func (m *PersonalAccountTransactionMutation) SetAccountID(id uint64) {
+	m.account = &id
+}
+
+// ClearAccount clears the "account" edge to the PersonalAccount entity.
+func (m *PersonalAccountTransactionMutation) ClearAccount() {
+	m.clearedaccount = true
+}
+
+// AccountCleared reports if the "account" edge to the PersonalAccount entity was cleared.
+func (m *PersonalAccountTransactionMutation) AccountCleared() bool {
+	return m.clearedaccount
+}
+
+// AccountID returns the "account" edge ID in the mutation.
+func (m *PersonalAccountTransactionMutation) AccountID() (id uint64, exists bool) {
+	if m.account != nil {
+		return *m.account, true
+	}
+	return
+}
+
+// AccountIDs returns the "account" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AccountID instead. It exists only for internal usage by the builders.
+func (m *PersonalAccountTransactionMutation) AccountIDs() (ids []uint64) {
+	if id := m.account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAccount resets all changes to the "account" edge.
+func (m *PersonalAccountTransactionMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+}
+
+// Where appends a list predicates to the PersonalAccountTransactionMutation builder.
+func (m *PersonalAccountTransactionMutation) Where(ps ...predicate.PersonalAccountTransaction) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the PersonalAccountTransactionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *PersonalAccountTransactionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.PersonalAccountTransaction, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *PersonalAccountTransactionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *PersonalAccountTransactionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (PersonalAccountTransaction).
+func (m *PersonalAccountTransactionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *PersonalAccountTransactionMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.created_at != nil {
+		fields = append(fields, personalaccounttransaction.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, personalaccounttransaction.FieldUpdatedAt)
+	}
+	if m.personal_account_id != nil {
+		fields = append(fields, personalaccounttransaction.FieldPersonalAccountID)
+	}
+	if m._type != nil {
+		fields = append(fields, personalaccounttransaction.FieldType)
+	}
+	if m.amount != nil {
+		fields = append(fields, personalaccounttransaction.FieldAmount)
+	}
+	if m.status != nil {
+		fields = append(fields, personalaccounttransaction.FieldStatus)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *PersonalAccountTransactionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case personalaccounttransaction.FieldCreatedAt:
+		return m.CreatedAt()
+	case personalaccounttransaction.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case personalaccounttransaction.FieldPersonalAccountID:
+		return m.PersonalAccountID()
+	case personalaccounttransaction.FieldType:
+		return m.GetType()
+	case personalaccounttransaction.FieldAmount:
+		return m.Amount()
+	case personalaccounttransaction.FieldStatus:
+		return m.Status()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *PersonalAccountTransactionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case personalaccounttransaction.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case personalaccounttransaction.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case personalaccounttransaction.FieldPersonalAccountID:
+		return m.OldPersonalAccountID(ctx)
+	case personalaccounttransaction.FieldType:
+		return m.OldType(ctx)
+	case personalaccounttransaction.FieldAmount:
+		return m.OldAmount(ctx)
+	case personalaccounttransaction.FieldStatus:
+		return m.OldStatus(ctx)
+	}
+	return nil, fmt.Errorf("unknown PersonalAccountTransaction field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PersonalAccountTransactionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case personalaccounttransaction.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case personalaccounttransaction.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case personalaccounttransaction.FieldPersonalAccountID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPersonalAccountID(v)
+		return nil
+	case personalaccounttransaction.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case personalaccounttransaction.FieldAmount:
+		v, ok := value.(float32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAmount(v)
+		return nil
+	case personalaccounttransaction.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PersonalAccountTransaction field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *PersonalAccountTransactionMutation) AddedFields() []string {
+	var fields []string
+	if m.addpersonal_account_id != nil {
+		fields = append(fields, personalaccounttransaction.FieldPersonalAccountID)
+	}
+	if m.addamount != nil {
+		fields = append(fields, personalaccounttransaction.FieldAmount)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *PersonalAccountTransactionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case personalaccounttransaction.FieldPersonalAccountID:
+		return m.AddedPersonalAccountID()
+	case personalaccounttransaction.FieldAmount:
+		return m.AddedAmount()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *PersonalAccountTransactionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case personalaccounttransaction.FieldPersonalAccountID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPersonalAccountID(v)
+		return nil
+	case personalaccounttransaction.FieldAmount:
+		v, ok := value.(float32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddAmount(v)
+		return nil
+	}
+	return fmt.Errorf("unknown PersonalAccountTransaction numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *PersonalAccountTransactionMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *PersonalAccountTransactionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *PersonalAccountTransactionMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown PersonalAccountTransaction nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *PersonalAccountTransactionMutation) ResetField(name string) error {
+	switch name {
+	case personalaccounttransaction.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case personalaccounttransaction.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case personalaccounttransaction.FieldPersonalAccountID:
+		m.ResetPersonalAccountID()
+		return nil
+	case personalaccounttransaction.FieldType:
+		m.ResetType()
+		return nil
+	case personalaccounttransaction.FieldAmount:
+		m.ResetAmount()
+		return nil
+	case personalaccounttransaction.FieldStatus:
+		m.ResetStatus()
+		return nil
+	}
+	return fmt.Errorf("unknown PersonalAccountTransaction field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *PersonalAccountTransactionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.account != nil {
+		edges = append(edges, personalaccounttransaction.EdgeAccount)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *PersonalAccountTransactionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case personalaccounttransaction.EdgeAccount:
+		if id := m.account; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *PersonalAccountTransactionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *PersonalAccountTransactionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *PersonalAccountTransactionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedaccount {
+		edges = append(edges, personalaccounttransaction.EdgeAccount)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *PersonalAccountTransactionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case personalaccounttransaction.EdgeAccount:
+		return m.clearedaccount
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *PersonalAccountTransactionMutation) ClearEdge(name string) error {
+	switch name {
+	case personalaccounttransaction.EdgeAccount:
+		m.ClearAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown PersonalAccountTransaction unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *PersonalAccountTransactionMutation) ResetEdge(name string) error {
+	switch name {
+	case personalaccounttransaction.EdgeAccount:
+		m.ResetAccount()
+		return nil
+	}
+	return fmt.Errorf("unknown PersonalAccountTransaction edge %s", name)
 }

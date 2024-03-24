@@ -31,11 +31,38 @@ var (
 			},
 		},
 	}
+	// PersonalAccountTransactionsColumns holds the columns for the "personal_account_transactions" table.
+	PersonalAccountTransactionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "personal_account_id", Type: field.TypeUint64},
+		{Name: "type", Type: field.TypeString, Size: 20},
+		{Name: "amount", Type: field.TypeFloat32, Default: 0, SchemaType: map[string]string{"mysql": "decimal(10,4)", "postgres": "numeric"}},
+		{Name: "status", Type: field.TypeString, Default: "PENDING"},
+		{Name: "personal_account_transactions", Type: field.TypeUint64, Nullable: true},
+	}
+	// PersonalAccountTransactionsTable holds the schema information for the "personal_account_transactions" table.
+	PersonalAccountTransactionsTable = &schema.Table{
+		Name:       "personal_account_transactions",
+		Columns:    PersonalAccountTransactionsColumns,
+		PrimaryKey: []*schema.Column{PersonalAccountTransactionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "personal_account_transactions_personal_accounts_transactions",
+				Columns:    []*schema.Column{PersonalAccountTransactionsColumns[7]},
+				RefColumns: []*schema.Column{PersonalAccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		PersonalAccountsTable,
+		PersonalAccountTransactionsTable,
 	}
 )
 
 func init() {
+	PersonalAccountTransactionsTable.ForeignKeys[0].RefTable = PersonalAccountsTable
 }

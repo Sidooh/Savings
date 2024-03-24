@@ -4,6 +4,7 @@ import (
 	"Savings/ent/schema/base"
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 )
@@ -22,12 +23,14 @@ func (PersonalAccount) Fields() []ent.Field {
 			MaxLen(20),
 		field.Float32("balance").
 			Default(0).
+			Min(0).
 			SchemaType(map[string]string{
 				dialect.MySQL:    "decimal(15,4)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.
 			}),
 		field.Float32("interest").
 			Default(0).
+			Min(0).
 			SchemaType(map[string]string{
 				dialect.MySQL:    "decimal(10,2)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.
@@ -45,5 +48,7 @@ func (PersonalAccount) Indexes() []ent.Index {
 
 // Edges of the PersonalAccount.
 func (PersonalAccount) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.To("transactions", PersonalAccountTransaction.Type),
+	}
 }

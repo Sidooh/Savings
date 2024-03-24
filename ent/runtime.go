@@ -4,6 +4,7 @@ package ent
 
 import (
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 	"Savings/ent/schema"
 	"time"
 )
@@ -39,8 +40,45 @@ func init() {
 	personalaccountDescBalance := personalaccountFields[2].Descriptor()
 	// personalaccount.DefaultBalance holds the default value on creation for the balance field.
 	personalaccount.DefaultBalance = personalaccountDescBalance.Default.(float32)
+	// personalaccount.BalanceValidator is a validator for the "balance" field. It is called by the builders before save.
+	personalaccount.BalanceValidator = personalaccountDescBalance.Validators[0].(func(float32) error)
 	// personalaccountDescInterest is the schema descriptor for interest field.
 	personalaccountDescInterest := personalaccountFields[3].Descriptor()
 	// personalaccount.DefaultInterest holds the default value on creation for the interest field.
 	personalaccount.DefaultInterest = personalaccountDescInterest.Default.(float32)
+	// personalaccount.InterestValidator is a validator for the "interest" field. It is called by the builders before save.
+	personalaccount.InterestValidator = personalaccountDescInterest.Validators[0].(func(float32) error)
+	personalaccounttransactionMixin := schema.PersonalAccountTransaction{}.Mixin()
+	personalaccounttransactionMixinFields1 := personalaccounttransactionMixin[1].Fields()
+	_ = personalaccounttransactionMixinFields1
+	personalaccounttransactionFields := schema.PersonalAccountTransaction{}.Fields()
+	_ = personalaccounttransactionFields
+	// personalaccounttransactionDescCreatedAt is the schema descriptor for created_at field.
+	personalaccounttransactionDescCreatedAt := personalaccounttransactionMixinFields1[0].Descriptor()
+	// personalaccounttransaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	personalaccounttransaction.DefaultCreatedAt = personalaccounttransactionDescCreatedAt.Default.(func() time.Time)
+	// personalaccounttransactionDescUpdatedAt is the schema descriptor for updated_at field.
+	personalaccounttransactionDescUpdatedAt := personalaccounttransactionMixinFields1[1].Descriptor()
+	// personalaccounttransaction.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	personalaccounttransaction.DefaultUpdatedAt = personalaccounttransactionDescUpdatedAt.Default.(func() time.Time)
+	// personalaccounttransaction.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	personalaccounttransaction.UpdateDefaultUpdatedAt = personalaccounttransactionDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// personalaccounttransactionDescPersonalAccountID is the schema descriptor for personal_account_id field.
+	personalaccounttransactionDescPersonalAccountID := personalaccounttransactionFields[0].Descriptor()
+	// personalaccounttransaction.PersonalAccountIDValidator is a validator for the "personal_account_id" field. It is called by the builders before save.
+	personalaccounttransaction.PersonalAccountIDValidator = personalaccounttransactionDescPersonalAccountID.Validators[0].(func(uint64) error)
+	// personalaccounttransactionDescType is the schema descriptor for type field.
+	personalaccounttransactionDescType := personalaccounttransactionFields[1].Descriptor()
+	// personalaccounttransaction.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	personalaccounttransaction.TypeValidator = personalaccounttransactionDescType.Validators[0].(func(string) error)
+	// personalaccounttransactionDescAmount is the schema descriptor for amount field.
+	personalaccounttransactionDescAmount := personalaccounttransactionFields[2].Descriptor()
+	// personalaccounttransaction.DefaultAmount holds the default value on creation for the amount field.
+	personalaccounttransaction.DefaultAmount = personalaccounttransactionDescAmount.Default.(float32)
+	// personalaccounttransaction.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
+	personalaccounttransaction.AmountValidator = personalaccounttransactionDescAmount.Validators[0].(func(float32) error)
+	// personalaccounttransactionDescStatus is the schema descriptor for status field.
+	personalaccounttransactionDescStatus := personalaccounttransactionFields[3].Descriptor()
+	// personalaccounttransaction.DefaultStatus holds the default value on creation for the status field.
+	personalaccounttransaction.DefaultStatus = personalaccounttransactionDescStatus.Default.(string)
 }

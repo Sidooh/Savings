@@ -4,6 +4,7 @@ package ent
 
 import (
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 	"Savings/ent/predicate"
 	"context"
 	"errors"
@@ -111,9 +112,45 @@ func (pau *PersonalAccountUpdate) AddInterest(f float32) *PersonalAccountUpdate 
 	return pau
 }
 
+// AddTransactionIDs adds the "transactions" edge to the PersonalAccountTransaction entity by IDs.
+func (pau *PersonalAccountUpdate) AddTransactionIDs(ids ...uint64) *PersonalAccountUpdate {
+	pau.mutation.AddTransactionIDs(ids...)
+	return pau
+}
+
+// AddTransactions adds the "transactions" edges to the PersonalAccountTransaction entity.
+func (pau *PersonalAccountUpdate) AddTransactions(p ...*PersonalAccountTransaction) *PersonalAccountUpdate {
+	ids := make([]uint64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pau.AddTransactionIDs(ids...)
+}
+
 // Mutation returns the PersonalAccountMutation object of the builder.
 func (pau *PersonalAccountUpdate) Mutation() *PersonalAccountMutation {
 	return pau.mutation
+}
+
+// ClearTransactions clears all "transactions" edges to the PersonalAccountTransaction entity.
+func (pau *PersonalAccountUpdate) ClearTransactions() *PersonalAccountUpdate {
+	pau.mutation.ClearTransactions()
+	return pau
+}
+
+// RemoveTransactionIDs removes the "transactions" edge to PersonalAccountTransaction entities by IDs.
+func (pau *PersonalAccountUpdate) RemoveTransactionIDs(ids ...uint64) *PersonalAccountUpdate {
+	pau.mutation.RemoveTransactionIDs(ids...)
+	return pau
+}
+
+// RemoveTransactions removes "transactions" edges to PersonalAccountTransaction entities.
+func (pau *PersonalAccountUpdate) RemoveTransactions(p ...*PersonalAccountTransaction) *PersonalAccountUpdate {
+	ids := make([]uint64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pau.RemoveTransactionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -164,6 +201,16 @@ func (pau *PersonalAccountUpdate) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.type": %w`, err)}
 		}
 	}
+	if v, ok := pau.mutation.Balance(); ok {
+		if err := personalaccount.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.balance": %w`, err)}
+		}
+	}
+	if v, ok := pau.mutation.Interest(); ok {
+		if err := personalaccount.InterestValidator(v); err != nil {
+			return &ValidationError{Name: "interest", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.interest": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -202,6 +249,51 @@ func (pau *PersonalAccountUpdate) sqlSave(ctx context.Context) (n int, err error
 	}
 	if value, ok := pau.mutation.AddedInterest(); ok {
 		_spec.AddField(personalaccount.FieldInterest, field.TypeFloat32, value)
+	}
+	if pau.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pau.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !pau.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pau.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pau.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -306,9 +398,45 @@ func (pauo *PersonalAccountUpdateOne) AddInterest(f float32) *PersonalAccountUpd
 	return pauo
 }
 
+// AddTransactionIDs adds the "transactions" edge to the PersonalAccountTransaction entity by IDs.
+func (pauo *PersonalAccountUpdateOne) AddTransactionIDs(ids ...uint64) *PersonalAccountUpdateOne {
+	pauo.mutation.AddTransactionIDs(ids...)
+	return pauo
+}
+
+// AddTransactions adds the "transactions" edges to the PersonalAccountTransaction entity.
+func (pauo *PersonalAccountUpdateOne) AddTransactions(p ...*PersonalAccountTransaction) *PersonalAccountUpdateOne {
+	ids := make([]uint64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pauo.AddTransactionIDs(ids...)
+}
+
 // Mutation returns the PersonalAccountMutation object of the builder.
 func (pauo *PersonalAccountUpdateOne) Mutation() *PersonalAccountMutation {
 	return pauo.mutation
+}
+
+// ClearTransactions clears all "transactions" edges to the PersonalAccountTransaction entity.
+func (pauo *PersonalAccountUpdateOne) ClearTransactions() *PersonalAccountUpdateOne {
+	pauo.mutation.ClearTransactions()
+	return pauo
+}
+
+// RemoveTransactionIDs removes the "transactions" edge to PersonalAccountTransaction entities by IDs.
+func (pauo *PersonalAccountUpdateOne) RemoveTransactionIDs(ids ...uint64) *PersonalAccountUpdateOne {
+	pauo.mutation.RemoveTransactionIDs(ids...)
+	return pauo
+}
+
+// RemoveTransactions removes "transactions" edges to PersonalAccountTransaction entities.
+func (pauo *PersonalAccountUpdateOne) RemoveTransactions(p ...*PersonalAccountTransaction) *PersonalAccountUpdateOne {
+	ids := make([]uint64, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pauo.RemoveTransactionIDs(ids...)
 }
 
 // Where appends a list predicates to the PersonalAccountUpdate builder.
@@ -372,6 +500,16 @@ func (pauo *PersonalAccountUpdateOne) check() error {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.type": %w`, err)}
 		}
 	}
+	if v, ok := pauo.mutation.Balance(); ok {
+		if err := personalaccount.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.balance": %w`, err)}
+		}
+	}
+	if v, ok := pauo.mutation.Interest(); ok {
+		if err := personalaccount.InterestValidator(v); err != nil {
+			return &ValidationError{Name: "interest", err: fmt.Errorf(`ent: validator failed for field "PersonalAccount.interest": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -427,6 +565,51 @@ func (pauo *PersonalAccountUpdateOne) sqlSave(ctx context.Context) (_node *Perso
 	}
 	if value, ok := pauo.mutation.AddedInterest(); ok {
 		_spec.AddField(personalaccount.FieldInterest, field.TypeFloat32, value)
+	}
+	if pauo.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pauo.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !pauo.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pauo.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   personalaccount.TransactionsTable,
+			Columns: []string{personalaccount.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personalaccounttransaction.FieldID, field.TypeUint64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &PersonalAccount{config: pauo.config}
 	_spec.Assign = _node.assignValues

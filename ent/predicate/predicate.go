@@ -8,3 +8,6 @@ import (
 
 // PersonalAccount is the predicate function for personalaccount builders.
 type PersonalAccount func(*sql.Selector)
+
+// PersonalAccountTransaction is the predicate function for personalaccounttransaction builders.
+type PersonalAccountTransaction func(*sql.Selector)

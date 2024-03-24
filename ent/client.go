@@ -12,10 +12,12 @@ import (
 	"Savings/ent/migrate"
 
 	"Savings/ent/personalaccount"
+	"Savings/ent/personalaccounttransaction"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // Client is the client that holds all ent builders.
@@ -25,6 +27,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// PersonalAccount is the client for interacting with the PersonalAccount builders.
 	PersonalAccount *PersonalAccountClient
+	// PersonalAccountTransaction is the client for interacting with the PersonalAccountTransaction builders.
+	PersonalAccountTransaction *PersonalAccountTransactionClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -37,6 +41,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.PersonalAccount = NewPersonalAccountClient(c.config)
+	c.PersonalAccountTransaction = NewPersonalAccountTransactionClient(c.config)
 }
 
 type (
@@ -127,9 +132,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		PersonalAccount: NewPersonalAccountClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		PersonalAccount:            NewPersonalAccountClient(cfg),
+		PersonalAccountTransaction: NewPersonalAccountTransactionClient(cfg),
 	}, nil
 }
 
@@ -147,9 +153,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:             ctx,
-		config:          cfg,
-		PersonalAccount: NewPersonalAccountClient(cfg),
+		ctx:                        ctx,
+		config:                     cfg,
+		PersonalAccount:            NewPersonalAccountClient(cfg),
+		PersonalAccountTransaction: NewPersonalAccountTransactionClient(cfg),
 	}, nil
 }
 
@@ -179,12 +186,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.PersonalAccount.Use(hooks...)
+	c.PersonalAccountTransaction.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.PersonalAccount.Intercept(interceptors...)
+	c.PersonalAccountTransaction.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -192,6 +201,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *PersonalAccountMutation:
 		return c.PersonalAccount.mutate(ctx, m)
+	case *PersonalAccountTransactionMutation:
+		return c.PersonalAccountTransaction.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -305,6 +316,22 @@ func (c *PersonalAccountClient) GetX(ctx context.Context, id uint64) *PersonalAc
 	return obj
 }
 
+// QueryTransactions queries the transactions edge of a PersonalAccount.
+func (c *PersonalAccountClient) QueryTransactions(pa *PersonalAccount) *PersonalAccountTransactionQuery {
+	query := (&PersonalAccountTransactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pa.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(personalaccount.Table, personalaccount.FieldID, id),
+			sqlgraph.To(personalaccounttransaction.Table, personalaccounttransaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, personalaccount.TransactionsTable, personalaccount.TransactionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pa.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *PersonalAccountClient) Hooks() []Hook {
 	return c.hooks.PersonalAccount
@@ -330,12 +357,161 @@ func (c *PersonalAccountClient) mutate(ctx context.Context, m *PersonalAccountMu
 	}
 }
 
+// PersonalAccountTransactionClient is a client for the PersonalAccountTransaction schema.
+type PersonalAccountTransactionClient struct {
+	config
+}
+
+// NewPersonalAccountTransactionClient returns a client for the PersonalAccountTransaction from the given config.
+func NewPersonalAccountTransactionClient(c config) *PersonalAccountTransactionClient {
+	return &PersonalAccountTransactionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `personalaccounttransaction.Hooks(f(g(h())))`.
+func (c *PersonalAccountTransactionClient) Use(hooks ...Hook) {
+	c.hooks.PersonalAccountTransaction = append(c.hooks.PersonalAccountTransaction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `personalaccounttransaction.Intercept(f(g(h())))`.
+func (c *PersonalAccountTransactionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PersonalAccountTransaction = append(c.inters.PersonalAccountTransaction, interceptors...)
+}
+
+// Create returns a builder for creating a PersonalAccountTransaction entity.
+func (c *PersonalAccountTransactionClient) Create() *PersonalAccountTransactionCreate {
+	mutation := newPersonalAccountTransactionMutation(c.config, OpCreate)
+	return &PersonalAccountTransactionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PersonalAccountTransaction entities.
+func (c *PersonalAccountTransactionClient) CreateBulk(builders ...*PersonalAccountTransactionCreate) *PersonalAccountTransactionCreateBulk {
+	return &PersonalAccountTransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *PersonalAccountTransactionClient) MapCreateBulk(slice any, setFunc func(*PersonalAccountTransactionCreate, int)) *PersonalAccountTransactionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &PersonalAccountTransactionCreateBulk{err: fmt.Errorf("calling to PersonalAccountTransactionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*PersonalAccountTransactionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &PersonalAccountTransactionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PersonalAccountTransaction.
+func (c *PersonalAccountTransactionClient) Update() *PersonalAccountTransactionUpdate {
+	mutation := newPersonalAccountTransactionMutation(c.config, OpUpdate)
+	return &PersonalAccountTransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PersonalAccountTransactionClient) UpdateOne(pat *PersonalAccountTransaction) *PersonalAccountTransactionUpdateOne {
+	mutation := newPersonalAccountTransactionMutation(c.config, OpUpdateOne, withPersonalAccountTransaction(pat))
+	return &PersonalAccountTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PersonalAccountTransactionClient) UpdateOneID(id uint64) *PersonalAccountTransactionUpdateOne {
+	mutation := newPersonalAccountTransactionMutation(c.config, OpUpdateOne, withPersonalAccountTransactionID(id))
+	return &PersonalAccountTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PersonalAccountTransaction.
+func (c *PersonalAccountTransactionClient) Delete() *PersonalAccountTransactionDelete {
+	mutation := newPersonalAccountTransactionMutation(c.config, OpDelete)
+	return &PersonalAccountTransactionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PersonalAccountTransactionClient) DeleteOne(pat *PersonalAccountTransaction) *PersonalAccountTransactionDeleteOne {
+	return c.DeleteOneID(pat.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PersonalAccountTransactionClient) DeleteOneID(id uint64) *PersonalAccountTransactionDeleteOne {
+	builder := c.Delete().Where(personalaccounttransaction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PersonalAccountTransactionDeleteOne{builder}
+}
+
+// Query returns a query builder for PersonalAccountTransaction.
+func (c *PersonalAccountTransactionClient) Query() *PersonalAccountTransactionQuery {
+	return &PersonalAccountTransactionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePersonalAccountTransaction},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a PersonalAccountTransaction entity by its id.
+func (c *PersonalAccountTransactionClient) Get(ctx context.Context, id uint64) (*PersonalAccountTransaction, error) {
+	return c.Query().Where(personalaccounttransaction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PersonalAccountTransactionClient) GetX(ctx context.Context, id uint64) *PersonalAccountTransaction {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAccount queries the account edge of a PersonalAccountTransaction.
+func (c *PersonalAccountTransactionClient) QueryAccount(pat *PersonalAccountTransaction) *PersonalAccountQuery {
+	query := (&PersonalAccountClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pat.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(personalaccounttransaction.Table, personalaccounttransaction.FieldID, id),
+			sqlgraph.To(personalaccount.Table, personalaccount.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, personalaccounttransaction.AccountTable, personalaccounttransaction.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(pat.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PersonalAccountTransactionClient) Hooks() []Hook {
+	return c.hooks.PersonalAccountTransaction
+}
+
+// Interceptors returns the client interceptors.
+func (c *PersonalAccountTransactionClient) Interceptors() []Interceptor {
+	return c.inters.PersonalAccountTransaction
+}
+
+func (c *PersonalAccountTransactionClient) mutate(ctx context.Context, m *PersonalAccountTransactionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PersonalAccountTransactionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PersonalAccountTransactionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PersonalAccountTransactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PersonalAccountTransactionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PersonalAccountTransaction mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		PersonalAccount []ent.Hook
+		PersonalAccount, PersonalAccountTransaction []ent.Hook
 	}
 	inters struct {
-		PersonalAccount []ent.Interceptor
+		PersonalAccount, PersonalAccountTransaction []ent.Interceptor
 	}
 )
