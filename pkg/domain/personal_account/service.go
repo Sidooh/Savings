@@ -6,6 +6,8 @@ import (
 
 type PersonalAccountService interface {
 	FindAllPersonalAccounts() ([]*ent.PersonalAccount, error)
+	FindPersonalAccountById(id uint64) (*ent.PersonalAccount, error)
+	CreateUser(user *ent.PersonalAccount) (*ent.PersonalAccount, error)
 }
 
 type personalAccountService struct {
@@ -18,4 +20,12 @@ func NewPersonalAccountService(repository PersonalAccountRepository) PersonalAcc
 
 func (p *personalAccountService) FindAllPersonalAccounts() ([]*ent.PersonalAccount, error) {
 	return p.repo.FindAll()
+}
+
+func (p *personalAccountService) FindPersonalAccountById(id uint64) (*ent.PersonalAccount, error) {
+	return p.repo.FindById(id)
+}
+
+func (p *personalAccountService) CreateUser(user *ent.PersonalAccount) (*ent.PersonalAccount, error) {
+	return p.repo.Create(user)
 }

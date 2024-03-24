@@ -5,8 +5,6 @@ import (
 	"Savings/pkg/datastore"
 	"Savings/utils"
 	"Savings/utils/logger"
-	"context"
-	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -24,6 +22,4 @@ func main() {
 	//clients.Init()
 
 	api.Server()
-
-	fmt.Println(datastore.EntClient.PersonalAccount.Query().All(context.Background()))
 }

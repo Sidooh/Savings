@@ -66,9 +66,25 @@ func (pac *PersonalAccountCreate) SetBalance(f float32) *PersonalAccountCreate {
 	return pac
 }
 
+// SetNillableBalance sets the "balance" field if the given value is not nil.
+func (pac *PersonalAccountCreate) SetNillableBalance(f *float32) *PersonalAccountCreate {
+	if f != nil {
+		pac.SetBalance(*f)
+	}
+	return pac
+}
+
 // SetInterest sets the "interest" field.
 func (pac *PersonalAccountCreate) SetInterest(f float32) *PersonalAccountCreate {
 	pac.mutation.SetInterest(f)
+	return pac
+}
+
+// SetNillableInterest sets the "interest" field if the given value is not nil.
+func (pac *PersonalAccountCreate) SetNillableInterest(f *float32) *PersonalAccountCreate {
+	if f != nil {
+		pac.SetInterest(*f)
+	}
 	return pac
 }
 
@@ -120,6 +136,14 @@ func (pac *PersonalAccountCreate) defaults() {
 	if _, ok := pac.mutation.UpdatedAt(); !ok {
 		v := personalaccount.DefaultUpdatedAt()
 		pac.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := pac.mutation.Balance(); !ok {
+		v := personalaccount.DefaultBalance
+		pac.mutation.SetBalance(v)
+	}
+	if _, ok := pac.mutation.Interest(); !ok {
+		v := personalaccount.DefaultInterest
+		pac.mutation.SetInterest(v)
 	}
 }
 

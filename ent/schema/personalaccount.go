@@ -21,11 +21,13 @@ func (PersonalAccount) Fields() []ent.Field {
 		field.String("type").
 			MaxLen(20),
 		field.Float32("balance").
+			Default(0).
 			SchemaType(map[string]string{
 				dialect.MySQL:    "decimal(15,4)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.
 			}),
 		field.Float32("interest").
+			Default(0).
 			SchemaType(map[string]string{
 				dialect.MySQL:    "decimal(10,2)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.

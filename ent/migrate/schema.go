@@ -15,8 +15,8 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "account_id", Type: field.TypeUint64},
 		{Name: "type", Type: field.TypeString, Size: 20},
-		{Name: "balance", Type: field.TypeFloat32, SchemaType: map[string]string{"mysql": "decimal(15,4)", "postgres": "numeric"}},
-		{Name: "interest", Type: field.TypeFloat32, SchemaType: map[string]string{"mysql": "decimal(10,2)", "postgres": "numeric"}},
+		{Name: "balance", Type: field.TypeFloat32, Default: 0, SchemaType: map[string]string{"mysql": "decimal(15,4)", "postgres": "numeric"}},
+		{Name: "interest", Type: field.TypeFloat32, Default: 0, SchemaType: map[string]string{"mysql": "decimal(10,2)", "postgres": "numeric"}},
 	}
 	// PersonalAccountsTable holds the schema information for the "personal_accounts" table.
 	PersonalAccountsTable = &schema.Table{

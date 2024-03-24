@@ -61,6 +61,10 @@ var (
 	AccountIDValidator func(uint64) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
+	// DefaultBalance holds the default value on creation for the "balance" field.
+	DefaultBalance float32
+	// DefaultInterest holds the default value on creation for the "interest" field.
+	DefaultInterest float32
 )
 
 // OrderOption defines the ordering options for the PersonalAccount queries.

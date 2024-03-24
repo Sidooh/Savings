@@ -2,11 +2,13 @@ package api
 
 import (
 	fiberHandlers "Savings/api/handlers/fiber"
+	"Savings/api/middleware"
 	domain "Savings/pkg/domain/personal_account"
 	entRepo "Savings/pkg/repositories/ent"
 	"Savings/utils/logger"
 	"errors"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
@@ -84,8 +86,7 @@ func setMiddleware(app *fiber.App) {
 		},
 	}))
 
-	//middleware.Validator = validator.New()
-
+	middleware.Validator = validator.New()
 }
 
 func setHandlers(app *fiber.App) {
@@ -97,5 +98,7 @@ func setHandlers(app *fiber.App) {
 	personalAccountHandler := fiberHandlers.NewPersonalAccountHandler(personalAccountService)
 
 	v1.Get("personal-accounts", personalAccountHandler.Get)
+	v1.Get("personal-accounts/:id", personalAccountHandler.GetById)
+	v1.Post("personal-accounts", personalAccountHandler.Create)
 
 }

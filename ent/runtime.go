@@ -35,4 +35,12 @@ func init() {
 	personalaccountDescType := personalaccountFields[1].Descriptor()
 	// personalaccount.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	personalaccount.TypeValidator = personalaccountDescType.Validators[0].(func(string) error)
+	// personalaccountDescBalance is the schema descriptor for balance field.
+	personalaccountDescBalance := personalaccountFields[2].Descriptor()
+	// personalaccount.DefaultBalance holds the default value on creation for the balance field.
+	personalaccount.DefaultBalance = personalaccountDescBalance.Default.(float32)
+	// personalaccountDescInterest is the schema descriptor for interest field.
+	personalaccountDescInterest := personalaccountFields[3].Descriptor()
+	// personalaccount.DefaultInterest holds the default value on creation for the interest field.
+	personalaccount.DefaultInterest = personalaccountDescInterest.Default.(float32)
 }
