@@ -1,8 +1,12 @@
 package main
 
 import (
+	"Savings/api"
+	"Savings/pkg/datastore"
 	"Savings/utils"
 	"Savings/utils/logger"
+	"context"
+	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -15,10 +19,11 @@ func main() {
 	}
 
 	logger.Init()
-	//datastore.Init()
+	datastore.Init()
 	//cache.Init()
 	//clients.Init()
 
-	logger.Log.Info("started")
+	api.Server()
 
+	fmt.Println(datastore.EntClient.PersonalAccount.Query().All(context.Background()))
 }

@@ -23,12 +23,12 @@ func Init() {
 	if logger == "GCP" {
 		//Format for GCP if needed
 	} else {
-		Log = slog.New(slog.NewJSONHandler(getLogFile("savings.log"), nil))
+		Log = slog.New(slog.NewJSONHandler(GetLogFile("savings.log"), nil))
 	}
 
 }
 
-func getLogFile(filename string) *os.File {
+func GetLogFile(filename string) *os.File {
 	pwd, err := os.Getwd()
 	path := filepath.Join(pwd, "storage/logs/", filename)
 

@@ -24,9 +24,10 @@ gen
 # vendor/
 
 # Sql test databases
-**/test.db
+**/.db
+**/*.db
 .env
-*.log
+storage/logs
 
 
 y.hide
