@@ -2,12 +2,14 @@ package domain
 
 import (
 	"Savings/ent"
+	"Savings/pkg/repositories"
+	"Savings/utils"
 )
 
 type PersonalAccountService interface {
-	FindAllPersonalAccounts() ([]*ent.PersonalAccount, error)
-	FindPersonalAccountById(id uint64) (*ent.PersonalAccount, error)
-	CreateUser(user *ent.PersonalAccount) (*ent.PersonalAccount, error)
+	FindAllPersonalAccounts(*utils.Paginator, *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error)
+	FindPersonalAccountById(uint64) (*ent.PersonalAccount, error)
+	CreatePersonalAccount(*ent.PersonalAccount) (*ent.PersonalAccount, error)
 }
 
 type personalAccountService struct {
@@ -18,14 +20,18 @@ func NewPersonalAccountService(repository PersonalAccountRepository) PersonalAcc
 	return &personalAccountService{repo: repository}
 }
 
-func (p *personalAccountService) FindAllPersonalAccounts() ([]*ent.PersonalAccount, error) {
-	return p.repo.FindAll()
+func (p *personalAccountService) FindAllPersonalAccounts(paginator *utils.Paginator, filters *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error) {
+	return p.repo.FindAll(paginator, filters)
 }
 
 func (p *personalAccountService) FindPersonalAccountById(id uint64) (*ent.PersonalAccount, error) {
 	return p.repo.FindById(id)
 }
 
-func (p *personalAccountService) CreateUser(user *ent.PersonalAccount) (*ent.PersonalAccount, error) {
-	return p.repo.Create(user)
+func (p *personalAccountService) CreatePersonalAccount(data *ent.PersonalAccount) (*ent.PersonalAccount, error) {
+	return p.repo.Create(data)
+}
+
+func (p *personalAccountService) FindPersonalAccountsByAccountId(id uint64) (ent.PersonalAccounts, error) {
+	return p.repo.FindByAccountId(id)
 }

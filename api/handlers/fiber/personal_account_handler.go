@@ -4,6 +4,8 @@ import (
 	"Savings/api/middleware"
 	"Savings/ent"
 	domain "Savings/pkg/domain/personal_account"
+	"Savings/pkg/repositories"
+	"Savings/utils"
 	"Savings/utils/responses"
 	"errors"
 	"github.com/gofiber/fiber/v2"
@@ -30,10 +32,12 @@ func NewPersonalAccountHandler(service domain.PersonalAccountService) PersonalAc
 }
 
 func (h *personalAccountHandler) Get(c *fiber.Ctx) error {
-	if personalAccounts, err := h.personalAccountService.FindAllPersonalAccounts(); err != nil {
+	paginator := utils.PaginatorFromFiber(c)
+	filters := repositories.PersonalAccountFiltersFromFiber(c)
+	if personalAccounts, err := h.personalAccountService.FindAllPersonalAccounts(paginator, filters); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err))
 	} else {
-		return c.Status(http.StatusOK).JSON(responses.SuccessResponse(personalAccounts))
+		return c.Status(http.StatusOK).JSON(responses.PaginatedResponse(personalAccounts, paginator))
 	}
 }
 
@@ -62,7 +66,7 @@ func (h *personalAccountHandler) Create(c *fiber.Ctx) error {
 		Type:      request.Type,
 	}
 
-	if personalAccount, err := h.personalAccountService.CreateUser(&json); err != nil {
+	if personalAccount, err := h.personalAccountService.CreatePersonalAccount(&json); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err))
 	} else {
 		return c.Status(http.StatusCreated).JSON(responses.SuccessResponse(personalAccount))

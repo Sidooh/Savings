@@ -75,6 +75,20 @@ func (patc *PersonalAccountTransactionCreate) SetNillableAmount(f *float32) *Per
 	return patc
 }
 
+// SetBalance sets the "balance" field.
+func (patc *PersonalAccountTransactionCreate) SetBalance(f float32) *PersonalAccountTransactionCreate {
+	patc.mutation.SetBalance(f)
+	return patc
+}
+
+// SetNillableBalance sets the "balance" field if the given value is not nil.
+func (patc *PersonalAccountTransactionCreate) SetNillableBalance(f *float32) *PersonalAccountTransactionCreate {
+	if f != nil {
+		patc.SetBalance(*f)
+	}
+	return patc
+}
+
 // SetStatus sets the "status" field.
 func (patc *PersonalAccountTransactionCreate) SetStatus(s string) *PersonalAccountTransactionCreate {
 	patc.mutation.SetStatus(s)
@@ -98,14 +112,6 @@ func (patc *PersonalAccountTransactionCreate) SetID(u uint64) *PersonalAccountTr
 // SetAccountID sets the "account" edge to the PersonalAccount entity by ID.
 func (patc *PersonalAccountTransactionCreate) SetAccountID(id uint64) *PersonalAccountTransactionCreate {
 	patc.mutation.SetAccountID(id)
-	return patc
-}
-
-// SetNillableAccountID sets the "account" edge to the PersonalAccount entity by ID if the given value is not nil.
-func (patc *PersonalAccountTransactionCreate) SetNillableAccountID(id *uint64) *PersonalAccountTransactionCreate {
-	if id != nil {
-		patc = patc.SetAccountID(*id)
-	}
 	return patc
 }
 
@@ -161,6 +167,10 @@ func (patc *PersonalAccountTransactionCreate) defaults() {
 		v := personalaccounttransaction.DefaultAmount
 		patc.mutation.SetAmount(v)
 	}
+	if _, ok := patc.mutation.Balance(); !ok {
+		v := personalaccounttransaction.DefaultBalance
+		patc.mutation.SetBalance(v)
+	}
 	if _, ok := patc.mutation.Status(); !ok {
 		v := personalaccounttransaction.DefaultStatus
 		patc.mutation.SetStatus(v)
@@ -178,11 +188,6 @@ func (patc *PersonalAccountTransactionCreate) check() error {
 	if _, ok := patc.mutation.PersonalAccountID(); !ok {
 		return &ValidationError{Name: "personal_account_id", err: errors.New(`ent: missing required field "PersonalAccountTransaction.personal_account_id"`)}
 	}
-	if v, ok := patc.mutation.PersonalAccountID(); ok {
-		if err := personalaccounttransaction.PersonalAccountIDValidator(v); err != nil {
-			return &ValidationError{Name: "personal_account_id", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.personal_account_id": %w`, err)}
-		}
-	}
 	if _, ok := patc.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "PersonalAccountTransaction.type"`)}
 	}
@@ -199,8 +204,19 @@ func (patc *PersonalAccountTransactionCreate) check() error {
 			return &ValidationError{Name: "amount", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.amount": %w`, err)}
 		}
 	}
+	if _, ok := patc.mutation.Balance(); !ok {
+		return &ValidationError{Name: "balance", err: errors.New(`ent: missing required field "PersonalAccountTransaction.balance"`)}
+	}
+	if v, ok := patc.mutation.Balance(); ok {
+		if err := personalaccounttransaction.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.balance": %w`, err)}
+		}
+	}
 	if _, ok := patc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "PersonalAccountTransaction.status"`)}
+	}
+	if _, ok := patc.mutation.AccountID(); !ok {
+		return &ValidationError{Name: "account", err: errors.New(`ent: missing required edge "PersonalAccountTransaction.account"`)}
 	}
 	return nil
 }
@@ -242,10 +258,6 @@ func (patc *PersonalAccountTransactionCreate) createSpec() (*PersonalAccountTran
 		_spec.SetField(personalaccounttransaction.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := patc.mutation.PersonalAccountID(); ok {
-		_spec.SetField(personalaccounttransaction.FieldPersonalAccountID, field.TypeUint64, value)
-		_node.PersonalAccountID = value
-	}
 	if value, ok := patc.mutation.GetType(); ok {
 		_spec.SetField(personalaccounttransaction.FieldType, field.TypeString, value)
 		_node.Type = value
@@ -253,6 +265,10 @@ func (patc *PersonalAccountTransactionCreate) createSpec() (*PersonalAccountTran
 	if value, ok := patc.mutation.Amount(); ok {
 		_spec.SetField(personalaccounttransaction.FieldAmount, field.TypeFloat32, value)
 		_node.Amount = value
+	}
+	if value, ok := patc.mutation.Balance(); ok {
+		_spec.SetField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
+		_node.Balance = value
 	}
 	if value, ok := patc.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)
@@ -272,7 +288,7 @@ func (patc *PersonalAccountTransactionCreate) createSpec() (*PersonalAccountTran
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.personal_account_transactions = &nodes[0]
+		_node.PersonalAccountID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

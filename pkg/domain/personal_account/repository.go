@@ -1,9 +1,15 @@
 package domain
 
-import "Savings/ent"
+import (
+	"Savings/ent"
+	"Savings/pkg/repositories"
+	"Savings/utils"
+)
 
 type PersonalAccountRepository interface {
-	FindAll() (accounts []*ent.PersonalAccount, err error)
-	FindById(id uint64) (account *ent.PersonalAccount, err error)
-	Create(data *ent.PersonalAccount) (account *ent.PersonalAccount, err error)
+	FindAll(*utils.Paginator, *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error)
+	FindById(uint64) (*ent.PersonalAccount, error)
+	Create(*ent.PersonalAccount) (*ent.PersonalAccount, error)
+
+	FindByAccountId(uint64) (ent.PersonalAccounts, error)
 }

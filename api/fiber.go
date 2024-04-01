@@ -3,11 +3,9 @@ package api
 import (
 	fiberHandlers "Savings/api/handlers/fiber"
 	"Savings/api/middleware"
-	"Savings/pkg/datastore"
 	domain "Savings/pkg/domain/personal_account"
 	entRepo "Savings/pkg/repositories/ent"
 	"Savings/utils/logger"
-	"context"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -15,11 +13,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/spf13/viper"
-
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/spf13/viper"
 )
 
 func FiberServer() *fiber.App {
@@ -60,12 +56,6 @@ func FiberServer() *fiber.App {
 	//data, _ := json.MarshalIndent(app.GetRoutes(true), "", "  ")
 	//fmt.Print(string(data))
 
-	acc, err := datastore.EntClient.PersonalAccount.Create().SetAccountID(1).SetType("TEST").Save(context.Background())
-	fmt.Println(acc, err)
-	_, _ = datastore.EntClient.PersonalAccountTransaction.Create().SetType("CREDIT").SetAccount(acc).Save(context.Background())
-
-	//datastore.EntClient.PersonalAccount.Create().AddTransactions(tx)
-
 	return app
 }
 
@@ -79,7 +69,7 @@ func setMiddleware(app *fiber.App) {
 	app.Use(helmet.New())
 	app.Use(cors.New())
 
-	app.Use(limiter.New(limiter.Config{Max: viper.GetInt("RATE_LIMIT")}))
+	//app.Use(limiter.New(limiter.Config{Max: viper.GetInt("RATE_LIMIT")}))
 	app.Use(recover.New())
 	app.Use(fiberLogger.New(fiberLogger.Config{
 		Output:     logger.GetLogFile("stats.log"),

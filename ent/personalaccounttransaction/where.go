@@ -80,6 +80,11 @@ func Amount(v float32) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldAmount, v))
 }
 
+// Balance applies equality check predicate on the "balance" field. It's identical to BalanceEQ.
+func Balance(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldBalance, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldStatus, v))
@@ -185,26 +190,6 @@ func PersonalAccountIDNotIn(vs ...uint64) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldNotIn(FieldPersonalAccountID, vs...))
 }
 
-// PersonalAccountIDGT applies the GT predicate on the "personal_account_id" field.
-func PersonalAccountIDGT(v uint64) predicate.PersonalAccountTransaction {
-	return predicate.PersonalAccountTransaction(sql.FieldGT(FieldPersonalAccountID, v))
-}
-
-// PersonalAccountIDGTE applies the GTE predicate on the "personal_account_id" field.
-func PersonalAccountIDGTE(v uint64) predicate.PersonalAccountTransaction {
-	return predicate.PersonalAccountTransaction(sql.FieldGTE(FieldPersonalAccountID, v))
-}
-
-// PersonalAccountIDLT applies the LT predicate on the "personal_account_id" field.
-func PersonalAccountIDLT(v uint64) predicate.PersonalAccountTransaction {
-	return predicate.PersonalAccountTransaction(sql.FieldLT(FieldPersonalAccountID, v))
-}
-
-// PersonalAccountIDLTE applies the LTE predicate on the "personal_account_id" field.
-func PersonalAccountIDLTE(v uint64) predicate.PersonalAccountTransaction {
-	return predicate.PersonalAccountTransaction(sql.FieldLTE(FieldPersonalAccountID, v))
-}
-
 // TypeEQ applies the EQ predicate on the "type" field.
 func TypeEQ(v string) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldType, v))
@@ -308,6 +293,46 @@ func AmountLT(v float32) predicate.PersonalAccountTransaction {
 // AmountLTE applies the LTE predicate on the "amount" field.
 func AmountLTE(v float32) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldLTE(FieldAmount, v))
+}
+
+// BalanceEQ applies the EQ predicate on the "balance" field.
+func BalanceEQ(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldBalance, v))
+}
+
+// BalanceNEQ applies the NEQ predicate on the "balance" field.
+func BalanceNEQ(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldNEQ(FieldBalance, v))
+}
+
+// BalanceIn applies the In predicate on the "balance" field.
+func BalanceIn(vs ...float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldIn(FieldBalance, vs...))
+}
+
+// BalanceNotIn applies the NotIn predicate on the "balance" field.
+func BalanceNotIn(vs ...float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldNotIn(FieldBalance, vs...))
+}
+
+// BalanceGT applies the GT predicate on the "balance" field.
+func BalanceGT(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldGT(FieldBalance, v))
+}
+
+// BalanceGTE applies the GTE predicate on the "balance" field.
+func BalanceGTE(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldGTE(FieldBalance, v))
+}
+
+// BalanceLT applies the LT predicate on the "balance" field.
+func BalanceLT(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldLT(FieldBalance, v))
+}
+
+// BalanceLTE applies the LTE predicate on the "balance" field.
+func BalanceLTE(v float32) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldLTE(FieldBalance, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

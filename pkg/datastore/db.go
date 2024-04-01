@@ -3,6 +3,7 @@ package datastore
 import (
 	"Savings/ent"
 	"context"
+	"fmt"
 	"github.com/spf13/viper"
 	"log"
 	"strings"
@@ -21,25 +22,38 @@ func Init() {
 	}
 
 	if env == "TEST" {
-		EntClient, err := ent.Open("sqlite3", "file:storage/data.db?cache=shared&_fk=1")
-		if err != nil {
-			log.Fatalf("failed opening connection to sqlite: %v", err)
+		if dsn == "" {
+			dsn = "file:storage/data.db?cache=shared&_fk=1"
 		}
-		defer EntClient.Close()
+		client, err := ent.Open("sqlite3", dsn)
+		if err != nil {
+			panic(fmt.Sprintf("failed opening connection to db: %v", err))
+		}
 
 		// Run the auto migration tool.
-		if err := EntClient.Schema.Create(context.Background()); err != nil {
+		if err := client.Schema.Create(context.Background()); err != nil {
 			log.Fatalf("failed creating schema resources: %v", err)
 		}
+
+		EntClient = client
 
 		return
 	}
 
 	client, err := ent.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("failed opening connection to mysql: %v", err)
+		panic(fmt.Sprintf("failed opening connection to db: %v", err))
 	}
-	//defer EntClient.Close()
+
+	// Ensure DB is live
+	_, err = client.ExecContext(context.Background(), "SELECT 1;")
+	if err != nil {
+		panic(err)
+	}
 
 	EntClient = client
+}
+
+func Close() {
+	EntClient.Close()
 }

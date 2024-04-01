@@ -829,23 +829,23 @@ func (m *PersonalAccountMutation) ResetEdge(name string) error {
 // PersonalAccountTransactionMutation represents an operation that mutates the PersonalAccountTransaction nodes in the graph.
 type PersonalAccountTransactionMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *uint64
-	created_at             *time.Time
-	updated_at             *time.Time
-	personal_account_id    *uint64
-	addpersonal_account_id *int64
-	_type                  *string
-	amount                 *float32
-	addamount              *float32
-	status                 *string
-	clearedFields          map[string]struct{}
-	account                *uint64
-	clearedaccount         bool
-	done                   bool
-	oldValue               func(context.Context) (*PersonalAccountTransaction, error)
-	predicates             []predicate.PersonalAccountTransaction
+	op             Op
+	typ            string
+	id             *uint64
+	created_at     *time.Time
+	updated_at     *time.Time
+	_type          *string
+	amount         *float32
+	addamount      *float32
+	balance        *float32
+	addbalance     *float32
+	status         *string
+	clearedFields  map[string]struct{}
+	account        *uint64
+	clearedaccount bool
+	done           bool
+	oldValue       func(context.Context) (*PersonalAccountTransaction, error)
+	predicates     []predicate.PersonalAccountTransaction
 }
 
 var _ ent.Mutation = (*PersonalAccountTransactionMutation)(nil)
@@ -1026,13 +1026,12 @@ func (m *PersonalAccountTransactionMutation) ResetUpdatedAt() {
 
 // SetPersonalAccountID sets the "personal_account_id" field.
 func (m *PersonalAccountTransactionMutation) SetPersonalAccountID(u uint64) {
-	m.personal_account_id = &u
-	m.addpersonal_account_id = nil
+	m.account = &u
 }
 
 // PersonalAccountID returns the value of the "personal_account_id" field in the mutation.
 func (m *PersonalAccountTransactionMutation) PersonalAccountID() (r uint64, exists bool) {
-	v := m.personal_account_id
+	v := m.account
 	if v == nil {
 		return
 	}
@@ -1056,28 +1055,9 @@ func (m *PersonalAccountTransactionMutation) OldPersonalAccountID(ctx context.Co
 	return oldValue.PersonalAccountID, nil
 }
 
-// AddPersonalAccountID adds u to the "personal_account_id" field.
-func (m *PersonalAccountTransactionMutation) AddPersonalAccountID(u int64) {
-	if m.addpersonal_account_id != nil {
-		*m.addpersonal_account_id += u
-	} else {
-		m.addpersonal_account_id = &u
-	}
-}
-
-// AddedPersonalAccountID returns the value that was added to the "personal_account_id" field in this mutation.
-func (m *PersonalAccountTransactionMutation) AddedPersonalAccountID() (r int64, exists bool) {
-	v := m.addpersonal_account_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetPersonalAccountID resets all changes to the "personal_account_id" field.
 func (m *PersonalAccountTransactionMutation) ResetPersonalAccountID() {
-	m.personal_account_id = nil
-	m.addpersonal_account_id = nil
+	m.account = nil
 }
 
 // SetType sets the "type" field.
@@ -1172,6 +1152,62 @@ func (m *PersonalAccountTransactionMutation) ResetAmount() {
 	m.addamount = nil
 }
 
+// SetBalance sets the "balance" field.
+func (m *PersonalAccountTransactionMutation) SetBalance(f float32) {
+	m.balance = &f
+	m.addbalance = nil
+}
+
+// Balance returns the value of the "balance" field in the mutation.
+func (m *PersonalAccountTransactionMutation) Balance() (r float32, exists bool) {
+	v := m.balance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBalance returns the old "balance" field's value of the PersonalAccountTransaction entity.
+// If the PersonalAccountTransaction object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PersonalAccountTransactionMutation) OldBalance(ctx context.Context) (v float32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBalance is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBalance requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBalance: %w", err)
+	}
+	return oldValue.Balance, nil
+}
+
+// AddBalance adds f to the "balance" field.
+func (m *PersonalAccountTransactionMutation) AddBalance(f float32) {
+	if m.addbalance != nil {
+		*m.addbalance += f
+	} else {
+		m.addbalance = &f
+	}
+}
+
+// AddedBalance returns the value that was added to the "balance" field in this mutation.
+func (m *PersonalAccountTransactionMutation) AddedBalance() (r float32, exists bool) {
+	v := m.addbalance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetBalance resets all changes to the "balance" field.
+func (m *PersonalAccountTransactionMutation) ResetBalance() {
+	m.balance = nil
+	m.addbalance = nil
+}
+
 // SetStatus sets the "status" field.
 func (m *PersonalAccountTransactionMutation) SetStatus(s string) {
 	m.status = &s
@@ -1216,6 +1252,7 @@ func (m *PersonalAccountTransactionMutation) SetAccountID(id uint64) {
 // ClearAccount clears the "account" edge to the PersonalAccount entity.
 func (m *PersonalAccountTransactionMutation) ClearAccount() {
 	m.clearedaccount = true
+	m.clearedFields[personalaccounttransaction.FieldPersonalAccountID] = struct{}{}
 }
 
 // AccountCleared reports if the "account" edge to the PersonalAccount entity was cleared.
@@ -1281,14 +1318,14 @@ func (m *PersonalAccountTransactionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PersonalAccountTransactionMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.created_at != nil {
 		fields = append(fields, personalaccounttransaction.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, personalaccounttransaction.FieldUpdatedAt)
 	}
-	if m.personal_account_id != nil {
+	if m.account != nil {
 		fields = append(fields, personalaccounttransaction.FieldPersonalAccountID)
 	}
 	if m._type != nil {
@@ -1296,6 +1333,9 @@ func (m *PersonalAccountTransactionMutation) Fields() []string {
 	}
 	if m.amount != nil {
 		fields = append(fields, personalaccounttransaction.FieldAmount)
+	}
+	if m.balance != nil {
+		fields = append(fields, personalaccounttransaction.FieldBalance)
 	}
 	if m.status != nil {
 		fields = append(fields, personalaccounttransaction.FieldStatus)
@@ -1318,6 +1358,8 @@ func (m *PersonalAccountTransactionMutation) Field(name string) (ent.Value, bool
 		return m.GetType()
 	case personalaccounttransaction.FieldAmount:
 		return m.Amount()
+	case personalaccounttransaction.FieldBalance:
+		return m.Balance()
 	case personalaccounttransaction.FieldStatus:
 		return m.Status()
 	}
@@ -1339,6 +1381,8 @@ func (m *PersonalAccountTransactionMutation) OldField(ctx context.Context, name 
 		return m.OldType(ctx)
 	case personalaccounttransaction.FieldAmount:
 		return m.OldAmount(ctx)
+	case personalaccounttransaction.FieldBalance:
+		return m.OldBalance(ctx)
 	case personalaccounttransaction.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -1385,6 +1429,13 @@ func (m *PersonalAccountTransactionMutation) SetField(name string, value ent.Val
 		}
 		m.SetAmount(v)
 		return nil
+	case personalaccounttransaction.FieldBalance:
+		v, ok := value.(float32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBalance(v)
+		return nil
 	case personalaccounttransaction.FieldStatus:
 		v, ok := value.(string)
 		if !ok {
@@ -1400,11 +1451,11 @@ func (m *PersonalAccountTransactionMutation) SetField(name string, value ent.Val
 // this mutation.
 func (m *PersonalAccountTransactionMutation) AddedFields() []string {
 	var fields []string
-	if m.addpersonal_account_id != nil {
-		fields = append(fields, personalaccounttransaction.FieldPersonalAccountID)
-	}
 	if m.addamount != nil {
 		fields = append(fields, personalaccounttransaction.FieldAmount)
+	}
+	if m.addbalance != nil {
+		fields = append(fields, personalaccounttransaction.FieldBalance)
 	}
 	return fields
 }
@@ -1414,10 +1465,10 @@ func (m *PersonalAccountTransactionMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *PersonalAccountTransactionMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case personalaccounttransaction.FieldPersonalAccountID:
-		return m.AddedPersonalAccountID()
 	case personalaccounttransaction.FieldAmount:
 		return m.AddedAmount()
+	case personalaccounttransaction.FieldBalance:
+		return m.AddedBalance()
 	}
 	return nil, false
 }
@@ -1427,19 +1478,19 @@ func (m *PersonalAccountTransactionMutation) AddedField(name string) (ent.Value,
 // type.
 func (m *PersonalAccountTransactionMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case personalaccounttransaction.FieldPersonalAccountID:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddPersonalAccountID(v)
-		return nil
 	case personalaccounttransaction.FieldAmount:
 		v, ok := value.(float32)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAmount(v)
+		return nil
+	case personalaccounttransaction.FieldBalance:
+		v, ok := value.(float32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBalance(v)
 		return nil
 	}
 	return fmt.Errorf("unknown PersonalAccountTransaction numeric field %s", name)
@@ -1482,6 +1533,9 @@ func (m *PersonalAccountTransactionMutation) ResetField(name string) error {
 		return nil
 	case personalaccounttransaction.FieldAmount:
 		m.ResetAmount()
+		return nil
+	case personalaccounttransaction.FieldBalance:
+		m.ResetBalance()
 		return nil
 	case personalaccounttransaction.FieldStatus:
 		m.ResetStatus()

@@ -37,7 +37,6 @@ func (patu *PersonalAccountTransactionUpdate) SetUpdatedAt(t time.Time) *Persona
 
 // SetPersonalAccountID sets the "personal_account_id" field.
 func (patu *PersonalAccountTransactionUpdate) SetPersonalAccountID(u uint64) *PersonalAccountTransactionUpdate {
-	patu.mutation.ResetPersonalAccountID()
 	patu.mutation.SetPersonalAccountID(u)
 	return patu
 }
@@ -47,12 +46,6 @@ func (patu *PersonalAccountTransactionUpdate) SetNillablePersonalAccountID(u *ui
 	if u != nil {
 		patu.SetPersonalAccountID(*u)
 	}
-	return patu
-}
-
-// AddPersonalAccountID adds u to the "personal_account_id" field.
-func (patu *PersonalAccountTransactionUpdate) AddPersonalAccountID(u int64) *PersonalAccountTransactionUpdate {
-	patu.mutation.AddPersonalAccountID(u)
 	return patu
 }
 
@@ -91,6 +84,27 @@ func (patu *PersonalAccountTransactionUpdate) AddAmount(f float32) *PersonalAcco
 	return patu
 }
 
+// SetBalance sets the "balance" field.
+func (patu *PersonalAccountTransactionUpdate) SetBalance(f float32) *PersonalAccountTransactionUpdate {
+	patu.mutation.ResetBalance()
+	patu.mutation.SetBalance(f)
+	return patu
+}
+
+// SetNillableBalance sets the "balance" field if the given value is not nil.
+func (patu *PersonalAccountTransactionUpdate) SetNillableBalance(f *float32) *PersonalAccountTransactionUpdate {
+	if f != nil {
+		patu.SetBalance(*f)
+	}
+	return patu
+}
+
+// AddBalance adds f to the "balance" field.
+func (patu *PersonalAccountTransactionUpdate) AddBalance(f float32) *PersonalAccountTransactionUpdate {
+	patu.mutation.AddBalance(f)
+	return patu
+}
+
 // SetStatus sets the "status" field.
 func (patu *PersonalAccountTransactionUpdate) SetStatus(s string) *PersonalAccountTransactionUpdate {
 	patu.mutation.SetStatus(s)
@@ -108,14 +122,6 @@ func (patu *PersonalAccountTransactionUpdate) SetNillableStatus(s *string) *Pers
 // SetAccountID sets the "account" edge to the PersonalAccount entity by ID.
 func (patu *PersonalAccountTransactionUpdate) SetAccountID(id uint64) *PersonalAccountTransactionUpdate {
 	patu.mutation.SetAccountID(id)
-	return patu
-}
-
-// SetNillableAccountID sets the "account" edge to the PersonalAccount entity by ID if the given value is not nil.
-func (patu *PersonalAccountTransactionUpdate) SetNillableAccountID(id *uint64) *PersonalAccountTransactionUpdate {
-	if id != nil {
-		patu = patu.SetAccountID(*id)
-	}
 	return patu
 }
 
@@ -173,11 +179,6 @@ func (patu *PersonalAccountTransactionUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (patu *PersonalAccountTransactionUpdate) check() error {
-	if v, ok := patu.mutation.PersonalAccountID(); ok {
-		if err := personalaccounttransaction.PersonalAccountIDValidator(v); err != nil {
-			return &ValidationError{Name: "personal_account_id", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.personal_account_id": %w`, err)}
-		}
-	}
 	if v, ok := patu.mutation.GetType(); ok {
 		if err := personalaccounttransaction.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.type": %w`, err)}
@@ -187,6 +188,14 @@ func (patu *PersonalAccountTransactionUpdate) check() error {
 		if err := personalaccounttransaction.AmountValidator(v); err != nil {
 			return &ValidationError{Name: "amount", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.amount": %w`, err)}
 		}
+	}
+	if v, ok := patu.mutation.Balance(); ok {
+		if err := personalaccounttransaction.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.balance": %w`, err)}
+		}
+	}
+	if _, ok := patu.mutation.AccountID(); patu.mutation.AccountCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "PersonalAccountTransaction.account"`)
 	}
 	return nil
 }
@@ -206,12 +215,6 @@ func (patu *PersonalAccountTransactionUpdate) sqlSave(ctx context.Context) (n in
 	if value, ok := patu.mutation.UpdatedAt(); ok {
 		_spec.SetField(personalaccounttransaction.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := patu.mutation.PersonalAccountID(); ok {
-		_spec.SetField(personalaccounttransaction.FieldPersonalAccountID, field.TypeUint64, value)
-	}
-	if value, ok := patu.mutation.AddedPersonalAccountID(); ok {
-		_spec.AddField(personalaccounttransaction.FieldPersonalAccountID, field.TypeUint64, value)
-	}
 	if value, ok := patu.mutation.GetType(); ok {
 		_spec.SetField(personalaccounttransaction.FieldType, field.TypeString, value)
 	}
@@ -220,6 +223,12 @@ func (patu *PersonalAccountTransactionUpdate) sqlSave(ctx context.Context) (n in
 	}
 	if value, ok := patu.mutation.AddedAmount(); ok {
 		_spec.AddField(personalaccounttransaction.FieldAmount, field.TypeFloat32, value)
+	}
+	if value, ok := patu.mutation.Balance(); ok {
+		_spec.SetField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
+	}
+	if value, ok := patu.mutation.AddedBalance(); ok {
+		_spec.AddField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
 	}
 	if value, ok := patu.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)
@@ -281,7 +290,6 @@ func (patuo *PersonalAccountTransactionUpdateOne) SetUpdatedAt(t time.Time) *Per
 
 // SetPersonalAccountID sets the "personal_account_id" field.
 func (patuo *PersonalAccountTransactionUpdateOne) SetPersonalAccountID(u uint64) *PersonalAccountTransactionUpdateOne {
-	patuo.mutation.ResetPersonalAccountID()
 	patuo.mutation.SetPersonalAccountID(u)
 	return patuo
 }
@@ -291,12 +299,6 @@ func (patuo *PersonalAccountTransactionUpdateOne) SetNillablePersonalAccountID(u
 	if u != nil {
 		patuo.SetPersonalAccountID(*u)
 	}
-	return patuo
-}
-
-// AddPersonalAccountID adds u to the "personal_account_id" field.
-func (patuo *PersonalAccountTransactionUpdateOne) AddPersonalAccountID(u int64) *PersonalAccountTransactionUpdateOne {
-	patuo.mutation.AddPersonalAccountID(u)
 	return patuo
 }
 
@@ -335,6 +337,27 @@ func (patuo *PersonalAccountTransactionUpdateOne) AddAmount(f float32) *Personal
 	return patuo
 }
 
+// SetBalance sets the "balance" field.
+func (patuo *PersonalAccountTransactionUpdateOne) SetBalance(f float32) *PersonalAccountTransactionUpdateOne {
+	patuo.mutation.ResetBalance()
+	patuo.mutation.SetBalance(f)
+	return patuo
+}
+
+// SetNillableBalance sets the "balance" field if the given value is not nil.
+func (patuo *PersonalAccountTransactionUpdateOne) SetNillableBalance(f *float32) *PersonalAccountTransactionUpdateOne {
+	if f != nil {
+		patuo.SetBalance(*f)
+	}
+	return patuo
+}
+
+// AddBalance adds f to the "balance" field.
+func (patuo *PersonalAccountTransactionUpdateOne) AddBalance(f float32) *PersonalAccountTransactionUpdateOne {
+	patuo.mutation.AddBalance(f)
+	return patuo
+}
+
 // SetStatus sets the "status" field.
 func (patuo *PersonalAccountTransactionUpdateOne) SetStatus(s string) *PersonalAccountTransactionUpdateOne {
 	patuo.mutation.SetStatus(s)
@@ -352,14 +375,6 @@ func (patuo *PersonalAccountTransactionUpdateOne) SetNillableStatus(s *string) *
 // SetAccountID sets the "account" edge to the PersonalAccount entity by ID.
 func (patuo *PersonalAccountTransactionUpdateOne) SetAccountID(id uint64) *PersonalAccountTransactionUpdateOne {
 	patuo.mutation.SetAccountID(id)
-	return patuo
-}
-
-// SetNillableAccountID sets the "account" edge to the PersonalAccount entity by ID if the given value is not nil.
-func (patuo *PersonalAccountTransactionUpdateOne) SetNillableAccountID(id *uint64) *PersonalAccountTransactionUpdateOne {
-	if id != nil {
-		patuo = patuo.SetAccountID(*id)
-	}
 	return patuo
 }
 
@@ -430,11 +445,6 @@ func (patuo *PersonalAccountTransactionUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (patuo *PersonalAccountTransactionUpdateOne) check() error {
-	if v, ok := patuo.mutation.PersonalAccountID(); ok {
-		if err := personalaccounttransaction.PersonalAccountIDValidator(v); err != nil {
-			return &ValidationError{Name: "personal_account_id", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.personal_account_id": %w`, err)}
-		}
-	}
 	if v, ok := patuo.mutation.GetType(); ok {
 		if err := personalaccounttransaction.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.type": %w`, err)}
@@ -444,6 +454,14 @@ func (patuo *PersonalAccountTransactionUpdateOne) check() error {
 		if err := personalaccounttransaction.AmountValidator(v); err != nil {
 			return &ValidationError{Name: "amount", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.amount": %w`, err)}
 		}
+	}
+	if v, ok := patuo.mutation.Balance(); ok {
+		if err := personalaccounttransaction.BalanceValidator(v); err != nil {
+			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.balance": %w`, err)}
+		}
+	}
+	if _, ok := patuo.mutation.AccountID(); patuo.mutation.AccountCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "PersonalAccountTransaction.account"`)
 	}
 	return nil
 }
@@ -480,12 +498,6 @@ func (patuo *PersonalAccountTransactionUpdateOne) sqlSave(ctx context.Context) (
 	if value, ok := patuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(personalaccounttransaction.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := patuo.mutation.PersonalAccountID(); ok {
-		_spec.SetField(personalaccounttransaction.FieldPersonalAccountID, field.TypeUint64, value)
-	}
-	if value, ok := patuo.mutation.AddedPersonalAccountID(); ok {
-		_spec.AddField(personalaccounttransaction.FieldPersonalAccountID, field.TypeUint64, value)
-	}
 	if value, ok := patuo.mutation.GetType(); ok {
 		_spec.SetField(personalaccounttransaction.FieldType, field.TypeString, value)
 	}
@@ -494,6 +506,12 @@ func (patuo *PersonalAccountTransactionUpdateOne) sqlSave(ctx context.Context) (
 	}
 	if value, ok := patuo.mutation.AddedAmount(); ok {
 		_spec.AddField(personalaccounttransaction.FieldAmount, field.TypeFloat32, value)
+	}
+	if value, ok := patuo.mutation.Balance(); ok {
+		_spec.SetField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
+	}
+	if value, ok := patuo.mutation.AddedBalance(); ok {
+		_spec.AddField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
 	}
 	if value, ok := patuo.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)

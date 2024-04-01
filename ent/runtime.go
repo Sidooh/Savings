@@ -63,10 +63,6 @@ func init() {
 	personalaccounttransaction.DefaultUpdatedAt = personalaccounttransactionDescUpdatedAt.Default.(func() time.Time)
 	// personalaccounttransaction.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	personalaccounttransaction.UpdateDefaultUpdatedAt = personalaccounttransactionDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// personalaccounttransactionDescPersonalAccountID is the schema descriptor for personal_account_id field.
-	personalaccounttransactionDescPersonalAccountID := personalaccounttransactionFields[0].Descriptor()
-	// personalaccounttransaction.PersonalAccountIDValidator is a validator for the "personal_account_id" field. It is called by the builders before save.
-	personalaccounttransaction.PersonalAccountIDValidator = personalaccounttransactionDescPersonalAccountID.Validators[0].(func(uint64) error)
 	// personalaccounttransactionDescType is the schema descriptor for type field.
 	personalaccounttransactionDescType := personalaccounttransactionFields[1].Descriptor()
 	// personalaccounttransaction.TypeValidator is a validator for the "type" field. It is called by the builders before save.
@@ -77,8 +73,14 @@ func init() {
 	personalaccounttransaction.DefaultAmount = personalaccounttransactionDescAmount.Default.(float32)
 	// personalaccounttransaction.AmountValidator is a validator for the "amount" field. It is called by the builders before save.
 	personalaccounttransaction.AmountValidator = personalaccounttransactionDescAmount.Validators[0].(func(float32) error)
+	// personalaccounttransactionDescBalance is the schema descriptor for balance field.
+	personalaccounttransactionDescBalance := personalaccounttransactionFields[3].Descriptor()
+	// personalaccounttransaction.DefaultBalance holds the default value on creation for the balance field.
+	personalaccounttransaction.DefaultBalance = personalaccounttransactionDescBalance.Default.(float32)
+	// personalaccounttransaction.BalanceValidator is a validator for the "balance" field. It is called by the builders before save.
+	personalaccounttransaction.BalanceValidator = personalaccounttransactionDescBalance.Validators[0].(func(float32) error)
 	// personalaccounttransactionDescStatus is the schema descriptor for status field.
-	personalaccounttransactionDescStatus := personalaccounttransactionFields[3].Descriptor()
+	personalaccounttransactionDescStatus := personalaccounttransactionFields[4].Descriptor()
 	// personalaccounttransaction.DefaultStatus holds the default value on creation for the status field.
 	personalaccounttransaction.DefaultStatus = personalaccounttransactionDescStatus.Default.(string)
 }

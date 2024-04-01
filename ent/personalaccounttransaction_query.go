@@ -23,7 +23,6 @@ type PersonalAccountTransactionQuery struct {
 	inters      []Interceptor
 	predicates  []predicate.PersonalAccountTransaction
 	withAccount *PersonalAccountQuery
-	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -369,18 +368,11 @@ func (patq *PersonalAccountTransactionQuery) prepareQuery(ctx context.Context) e
 func (patq *PersonalAccountTransactionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PersonalAccountTransaction, error) {
 	var (
 		nodes       = []*PersonalAccountTransaction{}
-		withFKs     = patq.withFKs
 		_spec       = patq.querySpec()
 		loadedTypes = [1]bool{
 			patq.withAccount != nil,
 		}
 	)
-	if patq.withAccount != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, personalaccounttransaction.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*PersonalAccountTransaction).scanValues(nil, columns)
 	}
@@ -412,10 +404,7 @@ func (patq *PersonalAccountTransactionQuery) loadAccount(ctx context.Context, qu
 	ids := make([]uint64, 0, len(nodes))
 	nodeids := make(map[uint64][]*PersonalAccountTransaction)
 	for i := range nodes {
-		if nodes[i].personal_account_transactions == nil {
-			continue
-		}
-		fk := *nodes[i].personal_account_transactions
+		fk := nodes[i].PersonalAccountID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -432,7 +421,7 @@ func (patq *PersonalAccountTransactionQuery) loadAccount(ctx context.Context, qu
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "personal_account_transactions" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "personal_account_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -465,6 +454,9 @@ func (patq *PersonalAccountTransactionQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != personalaccounttransaction.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if patq.withAccount != nil {
+			_spec.Node.AddColumnOnce(personalaccounttransaction.FieldPersonalAccountID)
 		}
 	}
 	if ps := patq.predicates; len(ps) > 0 {

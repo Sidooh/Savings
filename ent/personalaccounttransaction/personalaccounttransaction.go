@@ -24,6 +24,8 @@ const (
 	FieldType = "type"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
+	// FieldBalance holds the string denoting the balance field in the database.
+	FieldBalance = "balance"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
@@ -36,7 +38,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "personalaccount" package.
 	AccountInverseTable = "personal_accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
-	AccountColumn = "personal_account_transactions"
+	AccountColumn = "personal_account_id"
 )
 
 // Columns holds all SQL columns for personalaccounttransaction fields.
@@ -47,24 +49,14 @@ var Columns = []string{
 	FieldPersonalAccountID,
 	FieldType,
 	FieldAmount,
+	FieldBalance,
 	FieldStatus,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "personal_account_transactions"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"personal_account_transactions",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -78,14 +70,16 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
-	// PersonalAccountIDValidator is a validator for the "personal_account_id" field. It is called by the builders before save.
-	PersonalAccountIDValidator func(uint64) error
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultAmount holds the default value on creation for the "amount" field.
 	DefaultAmount float32
 	// AmountValidator is a validator for the "amount" field. It is called by the builders before save.
 	AmountValidator func(float32) error
+	// DefaultBalance holds the default value on creation for the "balance" field.
+	DefaultBalance float32
+	// BalanceValidator is a validator for the "balance" field. It is called by the builders before save.
+	BalanceValidator func(float32) error
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 )
@@ -121,6 +115,11 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByAmount orders the results by the amount field.
 func ByAmount(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAmount, opts...).ToFunc()
+}
+
+// ByBalance orders the results by the balance field.
+func ByBalance(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalance, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

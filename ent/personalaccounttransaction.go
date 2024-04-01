@@ -28,13 +28,14 @@ type PersonalAccountTransaction struct {
 	Type string `json:"type,omitempty"`
 	// Amount holds the value of the "amount" field.
 	Amount float32 `json:"amount,omitempty"`
+	// Balance holds the value of the "balance" field.
+	Balance float32 `json:"balance,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PersonalAccountTransactionQuery when eager-loading is set.
-	Edges                         PersonalAccountTransactionEdges `json:"edges"`
-	personal_account_transactions *uint64
-	selectValues                  sql.SelectValues
+	Edges        PersonalAccountTransactionEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // PersonalAccountTransactionEdges holds the relations/edges for other nodes in the graph.
@@ -62,7 +63,7 @@ func (*PersonalAccountTransaction) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case personalaccounttransaction.FieldAmount:
+		case personalaccounttransaction.FieldAmount, personalaccounttransaction.FieldBalance:
 			values[i] = new(sql.NullFloat64)
 		case personalaccounttransaction.FieldID, personalaccounttransaction.FieldPersonalAccountID:
 			values[i] = new(sql.NullInt64)
@@ -70,8 +71,6 @@ func (*PersonalAccountTransaction) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case personalaccounttransaction.FieldCreatedAt, personalaccounttransaction.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case personalaccounttransaction.ForeignKeys[0]: // personal_account_transactions
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -123,18 +122,17 @@ func (pat *PersonalAccountTransaction) assignValues(columns []string, values []a
 			} else if value.Valid {
 				pat.Amount = float32(value.Float64)
 			}
+		case personalaccounttransaction.FieldBalance:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field balance", values[i])
+			} else if value.Valid {
+				pat.Balance = float32(value.Float64)
+			}
 		case personalaccounttransaction.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				pat.Status = value.String
-			}
-		case personalaccounttransaction.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field personal_account_transactions", value)
-			} else if value.Valid {
-				pat.personal_account_transactions = new(uint64)
-				*pat.personal_account_transactions = uint64(value.Int64)
 			}
 		default:
 			pat.selectValues.Set(columns[i], values[i])
@@ -191,6 +189,9 @@ func (pat *PersonalAccountTransaction) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("amount=")
 	builder.WriteString(fmt.Sprintf("%v", pat.Amount))
+	builder.WriteString(", ")
+	builder.WriteString("balance=")
+	builder.WriteString(fmt.Sprintf("%v", pat.Balance))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(pat.Status)

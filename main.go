@@ -18,6 +18,8 @@ func main() {
 
 	logger.Init()
 	datastore.Init()
+	defer datastore.Close()
+
 	//cache.Init()
 	//clients.Init()
 

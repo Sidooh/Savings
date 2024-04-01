@@ -2,6 +2,7 @@ package responses
 
 import (
 	"Savings/ent"
+	"Savings/utils"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -13,6 +14,7 @@ type JsonResponse struct {
 	Message string      `json:"message,omitempty"`
 	Errors  interface{} `json:"errors,omitempty"` // application-level error messages, for debugging
 	Data    interface{} `json:"data,omitempty"`   // data wrapper
+	Meta    interface{} `json:"meta,omitempty"`   // meta wrapper e.g. pagination data
 }
 
 type ValidationError struct {
@@ -31,6 +33,14 @@ func SuccessResponse(data interface{}) JsonResponse {
 	return JsonResponse{
 		Status: true,
 		Data:   data,
+	}
+}
+
+func PaginatedResponse(data interface{}, paginator *utils.Paginator) JsonResponse {
+	return JsonResponse{
+		Status: true,
+		Data:   data,
+		Meta:   paginator.Meta(),
 	}
 }
 

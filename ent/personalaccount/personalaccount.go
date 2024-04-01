@@ -36,7 +36,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "personalaccounttransaction" package.
 	TransactionsInverseTable = "personal_account_transactions"
 	// TransactionsColumn is the table column denoting the transactions relation/edge.
-	TransactionsColumn = "personal_account_transactions"
+	TransactionsColumn = "personal_account_id"
 )
 
 // Columns holds all SQL columns for personalaccount fields.
