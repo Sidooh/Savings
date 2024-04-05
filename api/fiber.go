@@ -3,7 +3,8 @@ package api
 import (
 	fiberHandlers "Savings/api/handlers/fiber"
 	"Savings/api/middleware"
-	domain "Savings/pkg/domain/personal_account"
+	paDomain "Savings/pkg/domain/personal_account"
+	patDomain "Savings/pkg/domain/personal_account_transaction"
 	entRepo "Savings/pkg/repositories/ent"
 	"Savings/utils/logger"
 	"errors"
@@ -92,11 +93,18 @@ func setHandlers(app *fiber.App) {
 	v1 := api.Group("/v1")
 
 	personalAccountRepository := entRepo.NewEntPersonalAccountRepository()
-	personalAccountService := domain.NewPersonalAccountService(personalAccountRepository)
+	personalAccountService := paDomain.NewPersonalAccountService(personalAccountRepository)
 	personalAccountHandler := fiberHandlers.NewPersonalAccountHandler(personalAccountService)
 
 	v1.Get("personal-accounts", personalAccountHandler.Get)
 	v1.Get("personal-accounts/:id", personalAccountHandler.GetById)
 	v1.Post("personal-accounts", personalAccountHandler.Create)
+
+	personalAccountTransactionRepository := entRepo.NewEntPersonalAccountTransactionRepository()
+	personalAccountTransactionService := patDomain.NewPersonalAccountTransactionService(personalAccountTransactionRepository)
+	personalAccountTransactionHandler := fiberHandlers.NewPersonalAccountTransactionHandler(personalAccountTransactionService)
+
+	v1.Get("personal-account-transactions", personalAccountTransactionHandler.Get)
+	v1.Get("personal-accounts-transactions/:id", personalAccountTransactionHandler.GetById)
 
 }

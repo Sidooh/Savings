@@ -2,12 +2,14 @@ package domain
 
 import (
 	"Savings/ent"
+	"Savings/pkg/repositories/filters"
+	"Savings/utils"
 )
 
 type PersonalAccountTransactionService interface {
-	FindAllPersonalAccountTransactions() (ent.PersonalAccountTransactions, error)
+	FindAllPersonalAccountTransactions(paginator *utils.Paginator, filters *filters.PersonalAccountTransactionFilters) (ent.PersonalAccountTransactions, error)
 	FindPersonalAccountTransactionById(uint64) (*ent.PersonalAccountTransaction, error)
-	CreatePersonalAccountTransaction(*ent.PersonalAccountTransaction) (*ent.PersonalAccountTransaction, error)
+	//CreatePersonalAccountTransaction(*ent.PersonalAccountTransaction) (*ent.PersonalAccountTransaction, error)
 }
 
 type personalAccountTransactionService struct {
@@ -18,14 +20,10 @@ func NewPersonalAccountTransactionService(repository PersonalAccountTransactionR
 	return &personalAccountTransactionService{repo: repository}
 }
 
-func (p *personalAccountTransactionService) FindAllPersonalAccountTransactions() (ent.PersonalAccountTransactions, error) {
-	return p.repo.FindAll()
+func (p *personalAccountTransactionService) FindAllPersonalAccountTransactions(paginator *utils.Paginator, filters *filters.PersonalAccountTransactionFilters) (ent.PersonalAccountTransactions, error) {
+	return p.repo.FindAll(paginator, filters)
 }
 
 func (p *personalAccountTransactionService) FindPersonalAccountTransactionById(id uint64) (*ent.PersonalAccountTransaction, error) {
 	return p.repo.FindById(id)
-}
-
-func (p *personalAccountTransactionService) CreatePersonalAccountTransaction(data *ent.PersonalAccountTransaction) (*ent.PersonalAccountTransaction, error) {
-	return p.repo.Create(data)
 }

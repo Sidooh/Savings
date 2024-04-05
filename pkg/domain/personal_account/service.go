@@ -2,12 +2,12 @@ package domain
 
 import (
 	"Savings/ent"
-	"Savings/pkg/repositories"
+	"Savings/pkg/repositories/filters"
 	"Savings/utils"
 )
 
 type PersonalAccountService interface {
-	FindAllPersonalAccounts(*utils.Paginator, *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error)
+	FindAllPersonalAccounts(*utils.Paginator, *filters.PersonalAccountFilters) (ent.PersonalAccounts, error)
 	FindPersonalAccountById(uint64) (*ent.PersonalAccount, error)
 	CreatePersonalAccount(*ent.PersonalAccount) (*ent.PersonalAccount, error)
 }
@@ -20,7 +20,7 @@ func NewPersonalAccountService(repository PersonalAccountRepository) PersonalAcc
 	return &personalAccountService{repo: repository}
 }
 
-func (p *personalAccountService) FindAllPersonalAccounts(paginator *utils.Paginator, filters *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error) {
+func (p *personalAccountService) FindAllPersonalAccounts(paginator *utils.Paginator, filters *filters.PersonalAccountFilters) (ent.PersonalAccounts, error) {
 	return p.repo.FindAll(paginator, filters)
 }
 

@@ -4,7 +4,7 @@ import (
 	"Savings/api/middleware"
 	"Savings/ent"
 	domain "Savings/pkg/domain/personal_account"
-	"Savings/pkg/repositories"
+	"Savings/pkg/repositories/filters"
 	"Savings/utils"
 	"Savings/utils/responses"
 	"errors"
@@ -33,7 +33,7 @@ func NewPersonalAccountHandler(service domain.PersonalAccountService) PersonalAc
 
 func (h *personalAccountHandler) Get(c *fiber.Ctx) error {
 	paginator := utils.PaginatorFromFiber(c)
-	filters := repositories.PersonalAccountFiltersFromFiber(c)
+	filters := filters.PersonalAccountFiltersFromFiber(c)
 	if personalAccounts, err := h.personalAccountService.FindAllPersonalAccounts(paginator, filters); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err))
 	} else {

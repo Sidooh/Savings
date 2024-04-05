@@ -3,11 +3,23 @@ package entRepo
 import (
 	"Savings/ent"
 	"Savings/ent/enttest"
+	"Savings/pkg/datastore"
 	"Savings/utils"
 	"context"
+	"fmt"
 	"strconv"
 	"testing"
 )
+
+func TruncateTable(name string) {
+	_, err := datastore.EntClient.ExecContext(
+		context.Background(),
+		fmt.Sprintf("DELETE FROM %s; DELETE FROM sqlite_sequence WHERE name = '%s';", name, name),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func createPersonalAccount(c *ent.Client) (*ent.PersonalAccount, error) {
 	return c.PersonalAccount.Create().

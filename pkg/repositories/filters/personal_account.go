@@ -1,4 +1,4 @@
-package repositories
+package filters
 
 import (
 	"github.com/gofiber/fiber/v2"

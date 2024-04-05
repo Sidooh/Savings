@@ -3,6 +3,7 @@ package entRepo
 import (
 	"Savings/ent"
 	"Savings/pkg/datastore"
+	"context"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -14,30 +15,39 @@ func init() {
 	datastore.Init()
 }
 
-func TestPersonalAccountRepository_FindAll(t *testing.T) {
-	r := NewEntPersonalAccountRepository()
+func createPersonalAccountTransaction(c *ent.Client) (*ent.PersonalAccountTransaction, error) {
+	acc, _ := createPersonalAccount(c)
+	return c.PersonalAccountTransaction.Create().
+		SetAccount(acc).
+		SetType("CREDIT").
+		SetStatus("COMPLETED").
+		Save(context.Background())
+}
+
+func TestPersonalAccountTransactionRepository_FindAll(t *testing.T) {
+	r := NewEntPersonalAccountTransactionRepository()
 
 	all, err := r.FindAll(nil, nil)
 	assert.Nil(t, err)
 	assert.Empty(t, all)
 
-	createPersonalAccountRandom(datastore.EntClient)
+	createPersonalAccountTransaction(datastore.EntClient)
 
 	all, err = r.FindAll(nil, nil)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, all)
 
-	TruncateTable("personal_accounts")
+	TruncateTable("personal_account_transactions")
 }
 
-func TestPersonalAccountRepository_FindById(t *testing.T) {
-	r := NewEntPersonalAccountRepository()
+func TestPersonalAccountTransactionRepository_FindById(t *testing.T) {
+	r := NewEntPersonalAccountTransactionRepository()
 
 	pa, err := r.FindById(1)
 	assert.NotNil(t, err)
 	assert.Empty(t, pa)
 
-	random, err := createPersonalAccount(datastore.EntClient)
+	random, err := createPersonalAccountTransaction(datastore.EntClient)
 	assert.Nil(t, err)
 
 	pa, err = r.FindById(1)
@@ -46,10 +56,10 @@ func TestPersonalAccountRepository_FindById(t *testing.T) {
 
 	assert.EqualValues(t, random.ID, pa.ID)
 
-	TruncateTable("personal_accounts")
+	TruncateTable("personal_account_transactions")
 }
 
-func TestPersonalAccountRepository_Create(t *testing.T) {
+func TestPersonalAccountRepository_Cred(t *testing.T) {
 	r := NewEntPersonalAccountRepository()
 
 	acc := ent.PersonalAccount{
@@ -71,5 +81,5 @@ func TestPersonalAccountRepository_Create(t *testing.T) {
 	assert.Nil(t, created)
 	assert.NotNil(t, err)
 
-	TruncateTable("personal_accounts")
+	TruncateTable()
 }
