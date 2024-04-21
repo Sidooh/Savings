@@ -33,6 +33,7 @@ func (PersonalAccountTransaction) Fields() []ent.Field {
 				dialect.MySQL:    "decimal(15,4)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.
 			}),
+		field.String("description"),
 		field.String("status").
 			Default("PENDING"),
 	}

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"Savings/ent/job"
 	"Savings/ent/personalaccount"
 	"Savings/ent/personalaccounttransaction"
 	"Savings/ent/schema"
@@ -13,6 +14,41 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	jobMixin := schema.Job{}.Mixin()
+	jobMixinFields1 := jobMixin[1].Fields()
+	_ = jobMixinFields1
+	jobFields := schema.Job{}.Fields()
+	_ = jobFields
+	// jobDescCreatedAt is the schema descriptor for created_at field.
+	jobDescCreatedAt := jobMixinFields1[0].Descriptor()
+	// job.DefaultCreatedAt holds the default value on creation for the created_at field.
+	job.DefaultCreatedAt = jobDescCreatedAt.Default.(func() time.Time)
+	// jobDescUpdatedAt is the schema descriptor for updated_at field.
+	jobDescUpdatedAt := jobMixinFields1[1].Descriptor()
+	// job.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	job.DefaultUpdatedAt = jobDescUpdatedAt.Default.(func() time.Time)
+	// job.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	job.UpdateDefaultUpdatedAt = jobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// jobDescStatus is the schema descriptor for status field.
+	jobDescStatus := jobFields[2].Descriptor()
+	// job.DefaultStatus holds the default value on creation for the status field.
+	job.DefaultStatus = jobDescStatus.Default.(string)
+	// jobDescBatch is the schema descriptor for batch field.
+	jobDescBatch := jobFields[3].Descriptor()
+	// job.DefaultBatch holds the default value on creation for the batch field.
+	job.DefaultBatch = jobDescBatch.Default.(int)
+	// jobDescLastProcessedID is the schema descriptor for last_processed_id field.
+	jobDescLastProcessedID := jobFields[4].Descriptor()
+	// job.DefaultLastProcessedID holds the default value on creation for the last_processed_id field.
+	job.DefaultLastProcessedID = jobDescLastProcessedID.Default.(uint64)
+	// jobDescTotalProcessed is the schema descriptor for total_processed field.
+	jobDescTotalProcessed := jobFields[5].Descriptor()
+	// job.DefaultTotalProcessed holds the default value on creation for the total_processed field.
+	job.DefaultTotalProcessed = jobDescTotalProcessed.Default.(uint)
+	// jobDescData is the schema descriptor for data field.
+	jobDescData := jobFields[6].Descriptor()
+	// job.DefaultData holds the default value on creation for the data field.
+	job.DefaultData = jobDescData.Default.(map[string]interface{})
 	personalaccountMixin := schema.PersonalAccount{}.Mixin()
 	personalaccountMixinFields1 := personalaccountMixin[1].Fields()
 	_ = personalaccountMixinFields1
@@ -80,7 +116,7 @@ func init() {
 	// personalaccounttransaction.BalanceValidator is a validator for the "balance" field. It is called by the builders before save.
 	personalaccounttransaction.BalanceValidator = personalaccounttransactionDescBalance.Validators[0].(func(float32) error)
 	// personalaccounttransactionDescStatus is the schema descriptor for status field.
-	personalaccounttransactionDescStatus := personalaccounttransactionFields[4].Descriptor()
+	personalaccounttransactionDescStatus := personalaccounttransactionFields[5].Descriptor()
 	// personalaccounttransaction.DefaultStatus holds the default value on creation for the status field.
 	personalaccounttransaction.DefaultStatus = personalaccounttransactionDescStatus.Default.(string)
 }

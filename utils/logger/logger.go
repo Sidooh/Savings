@@ -2,10 +2,12 @@ package logger
 
 import (
 	"Savings/utils"
+	"fmt"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var Log = slog.Default()
@@ -23,7 +25,8 @@ func Init() {
 	if logger == "GCP" {
 		//Format for GCP if needed
 	} else {
-		Log = slog.New(slog.NewJSONHandler(GetLogFile("savings.log"), nil))
+		fileName := fmt.Sprintf("savings-%s.log", time.Now().Format("2006-01-02"))
+		Log = slog.New(slog.NewJSONHandler(GetLogFile(fileName), nil))
 	}
 
 }

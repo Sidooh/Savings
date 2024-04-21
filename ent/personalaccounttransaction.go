@@ -30,6 +30,8 @@ type PersonalAccountTransaction struct {
 	Amount float32 `json:"amount,omitempty"`
 	// Balance holds the value of the "balance" field.
 	Balance float32 `json:"balance,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -67,7 +69,7 @@ func (*PersonalAccountTransaction) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case personalaccounttransaction.FieldID, personalaccounttransaction.FieldPersonalAccountID:
 			values[i] = new(sql.NullInt64)
-		case personalaccounttransaction.FieldType, personalaccounttransaction.FieldStatus:
+		case personalaccounttransaction.FieldType, personalaccounttransaction.FieldDescription, personalaccounttransaction.FieldStatus:
 			values[i] = new(sql.NullString)
 		case personalaccounttransaction.FieldCreatedAt, personalaccounttransaction.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -127,6 +129,12 @@ func (pat *PersonalAccountTransaction) assignValues(columns []string, values []a
 				return fmt.Errorf("unexpected type %T for field balance", values[i])
 			} else if value.Valid {
 				pat.Balance = float32(value.Float64)
+			}
+		case personalaccounttransaction.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				pat.Description = value.String
 			}
 		case personalaccounttransaction.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -192,6 +200,9 @@ func (pat *PersonalAccountTransaction) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("balance=")
 	builder.WriteString(fmt.Sprintf("%v", pat.Balance))
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(pat.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(pat.Status)

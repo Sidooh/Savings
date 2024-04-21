@@ -9,7 +9,6 @@ import (
 type PersonalAccountTransactionService interface {
 	FindAllPersonalAccountTransactions(paginator *utils.Paginator, filters *filters.PersonalAccountTransactionFilters) (ent.PersonalAccountTransactions, error)
 	FindPersonalAccountTransactionById(uint64) (*ent.PersonalAccountTransaction, error)
-	//CreatePersonalAccountTransaction(*ent.PersonalAccountTransaction) (*ent.PersonalAccountTransaction, error)
 }
 
 type personalAccountTransactionService struct {

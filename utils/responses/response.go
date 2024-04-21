@@ -3,9 +3,11 @@ package responses
 import (
 	"Savings/ent"
 	"Savings/utils"
+	internal_errors "Savings/utils/errors"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -44,12 +46,13 @@ func PaginatedResponse(data interface{}, paginator *utils.Paginator) JsonRespons
 	}
 }
 
-func ErrorResponse(err interface{}) JsonResponse {
+func ErrorResponse(err interface{}, c *fiber.Ctx) JsonResponse {
 	r := JsonResponse{
 		Status:  false,
 		Message: "an error occurred",
 		Errors:  nil,
 	}
+	c.Status(fiber.StatusInternalServerError)
 
 	switch t := err.(type) {
 	case validator.ValidationErrors:
@@ -72,14 +75,24 @@ func ErrorResponse(err interface{}) JsonResponse {
 		}
 		r.Errors = m
 		r.Message = "invalid request"
+		c.Status(fiber.StatusUnprocessableEntity)
 	case error:
 		var NFE *ent.NotFoundError
 		var CE *ent.ValidationError
+
 		switch {
 		case errors.As(t, &NFE):
 			r.Message = "not found"
+			c.Status(fiber.StatusNotFound)
 		case errors.As(t, &CE):
+			c.Status(fiber.StatusUnprocessableEntity)
 			r.Message = "validation failed for db update"
+		case errors.Is(t, internal_errors.InsufficientBalance):
+			c.Status(fiber.StatusPaymentRequired)
+			r.Message = t.Error()
+		case errors.Is(t, internal_errors.InvalidIdParameter):
+			c.Status(fiber.StatusUnprocessableEntity)
+			r.Message = t.Error()
 		default:
 			r.Message = t.Error()
 		}

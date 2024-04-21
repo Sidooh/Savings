@@ -2,14 +2,18 @@ package domain
 
 import (
 	"Savings/ent"
-	"Savings/pkg/repositories"
+	"Savings/pkg/repositories/filters"
 	"Savings/utils"
 )
 
 type PersonalAccountRepository interface {
-	FindAll(*utils.Paginator, *repositories.PersonalAccountFilters) (ent.PersonalAccounts, error)
+	FindAll(*utils.Paginator, *filters.PersonalAccountFilters) (ent.PersonalAccounts, error)
 	FindById(uint64) (*ent.PersonalAccount, error)
 	Create(*ent.PersonalAccount) (*ent.PersonalAccount, error)
 
-	FindByAccountId(uint64) (ent.PersonalAccounts, error)
+	Credit(id uint64, amount float32, description string) error
+	Debit(id uint64, amount float32, description string) error
+
+	CalculateInterest() error
+	AllocateInterest() error
 }

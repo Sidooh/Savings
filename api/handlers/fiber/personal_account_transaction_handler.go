@@ -4,8 +4,8 @@ import (
 	domain "Savings/pkg/domain/personal_account_transaction"
 	"Savings/pkg/repositories/filters"
 	"Savings/utils"
+	internal_errors "Savings/utils/errors"
 	"Savings/utils/responses"
-	"errors"
 	"github.com/gofiber/fiber/v2"
 	"net/http"
 )
@@ -27,7 +27,7 @@ func (h *personalAccountTransactionHandler) Get(c *fiber.Ctx) error {
 	paginator := utils.PaginatorFromFiber(c)
 	filters := filters.PersonalAccountTransactionFiltersFromFiber(c)
 	if personalAccountTransactions, err := h.personalAccountTransactionService.FindAllPersonalAccountTransactions(paginator, filters); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err))
+		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err, c))
 	} else {
 		return c.Status(http.StatusOK).JSON(responses.PaginatedResponse(personalAccountTransactions, paginator))
 	}
@@ -36,12 +36,11 @@ func (h *personalAccountTransactionHandler) Get(c *fiber.Ctx) error {
 func (h *personalAccountTransactionHandler) GetById(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
-		c.Status(http.StatusBadRequest)
-		return c.JSON(responses.ErrorResponse(errors.New("invalid id parameter")))
+		return c.JSON(responses.ErrorResponse(internal_errors.InvalidIdParameter, c))
 	}
 
 	if personalAccountTransaction, err := h.personalAccountTransactionService.FindPersonalAccountTransactionById(uint64(id)); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err))
+		return c.Status(http.StatusInternalServerError).JSON(responses.ErrorResponse(err, c))
 	} else {
 		return c.Status(http.StatusOK).JSON(responses.SuccessResponse(personalAccountTransaction))
 	}

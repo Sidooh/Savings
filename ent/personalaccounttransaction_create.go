@@ -89,6 +89,12 @@ func (patc *PersonalAccountTransactionCreate) SetNillableBalance(f *float32) *Pe
 	return patc
 }
 
+// SetDescription sets the "description" field.
+func (patc *PersonalAccountTransactionCreate) SetDescription(s string) *PersonalAccountTransactionCreate {
+	patc.mutation.SetDescription(s)
+	return patc
+}
+
 // SetStatus sets the "status" field.
 func (patc *PersonalAccountTransactionCreate) SetStatus(s string) *PersonalAccountTransactionCreate {
 	patc.mutation.SetStatus(s)
@@ -212,6 +218,9 @@ func (patc *PersonalAccountTransactionCreate) check() error {
 			return &ValidationError{Name: "balance", err: fmt.Errorf(`ent: validator failed for field "PersonalAccountTransaction.balance": %w`, err)}
 		}
 	}
+	if _, ok := patc.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "PersonalAccountTransaction.description"`)}
+	}
 	if _, ok := patc.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "PersonalAccountTransaction.status"`)}
 	}
@@ -269,6 +278,10 @@ func (patc *PersonalAccountTransactionCreate) createSpec() (*PersonalAccountTran
 	if value, ok := patc.mutation.Balance(); ok {
 		_spec.SetField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
 		_node.Balance = value
+	}
+	if value, ok := patc.mutation.Description(); ok {
+		_spec.SetField(personalaccounttransaction.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if value, ok := patc.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)

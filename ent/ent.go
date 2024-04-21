@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"Savings/ent/job"
 	"Savings/ent/personalaccount"
 	"Savings/ent/personalaccounttransaction"
 	"context"
@@ -74,6 +75,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			job.Table:                        job.ValidColumn,
 			personalaccount.Table:            personalaccount.ValidColumn,
 			personalaccounttransaction.Table: personalaccounttransaction.ValidColumn,
 		})

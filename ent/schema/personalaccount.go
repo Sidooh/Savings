@@ -32,7 +32,7 @@ func (PersonalAccount) Fields() []ent.Field {
 			Default(0).
 			Min(0).
 			SchemaType(map[string]string{
-				dialect.MySQL:    "decimal(10,2)", // Override MySQL.
+				dialect.MySQL:    "decimal(10,4)", // Override MySQL.
 				dialect.Postgres: "numeric",       // Override Postgres.
 			}),
 	}

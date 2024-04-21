@@ -14,6 +14,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Job is the client for interacting with the Job builders.
+	Job *JobClient
 	// PersonalAccount is the client for interacting with the PersonalAccount builders.
 	PersonalAccount *PersonalAccountClient
 	// PersonalAccountTransaction is the client for interacting with the PersonalAccountTransaction builders.
@@ -149,6 +151,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Job = NewJobClient(tx.config)
 	tx.PersonalAccount = NewPersonalAccountClient(tx.config)
 	tx.PersonalAccountTransaction = NewPersonalAccountTransactionClient(tx.config)
 }
@@ -160,7 +163,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: PersonalAccount.QueryXXX(), the query will be executed
+// applies a query, for example: Job.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

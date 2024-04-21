@@ -10,6 +10,9 @@ type PersonalAccountService interface {
 	FindAllPersonalAccounts(*utils.Paginator, *filters.PersonalAccountFilters) (ent.PersonalAccounts, error)
 	FindPersonalAccountById(uint64) (*ent.PersonalAccount, error)
 	CreatePersonalAccount(*ent.PersonalAccount) (*ent.PersonalAccount, error)
+
+	CreditPersonalAccount(id uint64, amount float32, description string) error
+	DebitPersonalAccount(id uint64, amount float32, description string) error
 }
 
 type personalAccountService struct {
@@ -32,6 +35,11 @@ func (p *personalAccountService) CreatePersonalAccount(data *ent.PersonalAccount
 	return p.repo.Create(data)
 }
 
-func (p *personalAccountService) FindPersonalAccountsByAccountId(id uint64) (ent.PersonalAccounts, error) {
-	return p.repo.FindByAccountId(id)
+func (p *personalAccountService) CreditPersonalAccount(id uint64, amount float32, description string) error {
+	return p.repo.Credit(id, amount, description)
+}
+
+func (p *personalAccountService) DebitPersonalAccount(id uint64, amount float32, description string) error {
+	return p.repo.Debit(id, amount, description)
+
 }

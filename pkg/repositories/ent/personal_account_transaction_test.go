@@ -81,5 +81,5 @@ func TestPersonalAccountRepository_Cred(t *testing.T) {
 	assert.Nil(t, created)
 	assert.NotNil(t, err)
 
-	TruncateTable()
+	TruncateTable("personal_account_transactions")
 }

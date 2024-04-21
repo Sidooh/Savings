@@ -85,6 +85,11 @@ func Balance(v float32) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldBalance, v))
 }
 
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldDescription, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldStatus, v))
@@ -333,6 +338,71 @@ func BalanceLT(v float32) predicate.PersonalAccountTransaction {
 // BalanceLTE applies the LTE predicate on the "balance" field.
 func BalanceLTE(v float32) predicate.PersonalAccountTransaction {
 	return predicate.PersonalAccountTransaction(sql.FieldLTE(FieldBalance, v))
+}
+
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldEQ(FieldDescription, v))
+}
+
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldNEQ(FieldDescription, v))
+}
+
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldIn(FieldDescription, vs...))
+}
+
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldNotIn(FieldDescription, vs...))
+}
+
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldGT(FieldDescription, v))
+}
+
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldGTE(FieldDescription, v))
+}
+
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldLT(FieldDescription, v))
+}
+
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldLTE(FieldDescription, v))
+}
+
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldContains(FieldDescription, v))
+}
+
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldHasPrefix(FieldDescription, v))
+}
+
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldHasSuffix(FieldDescription, v))
+}
+
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldEqualFold(FieldDescription, v))
+}
+
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.PersonalAccountTransaction {
+	return predicate.PersonalAccountTransaction(sql.FieldContainsFold(FieldDescription, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

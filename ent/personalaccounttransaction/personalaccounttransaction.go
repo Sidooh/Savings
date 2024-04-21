@@ -26,6 +26,8 @@ const (
 	FieldAmount = "amount"
 	// FieldBalance holds the string denoting the balance field in the database.
 	FieldBalance = "balance"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
@@ -50,6 +52,7 @@ var Columns = []string{
 	FieldType,
 	FieldAmount,
 	FieldBalance,
+	FieldDescription,
 	FieldStatus,
 }
 
@@ -120,6 +123,11 @@ func ByAmount(opts ...sql.OrderTermOption) OrderOption {
 // ByBalance orders the results by the balance field.
 func ByBalance(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldBalance, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

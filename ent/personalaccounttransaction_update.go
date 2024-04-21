@@ -105,6 +105,20 @@ func (patu *PersonalAccountTransactionUpdate) AddBalance(f float32) *PersonalAcc
 	return patu
 }
 
+// SetDescription sets the "description" field.
+func (patu *PersonalAccountTransactionUpdate) SetDescription(s string) *PersonalAccountTransactionUpdate {
+	patu.mutation.SetDescription(s)
+	return patu
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (patu *PersonalAccountTransactionUpdate) SetNillableDescription(s *string) *PersonalAccountTransactionUpdate {
+	if s != nil {
+		patu.SetDescription(*s)
+	}
+	return patu
+}
+
 // SetStatus sets the "status" field.
 func (patu *PersonalAccountTransactionUpdate) SetStatus(s string) *PersonalAccountTransactionUpdate {
 	patu.mutation.SetStatus(s)
@@ -229,6 +243,9 @@ func (patu *PersonalAccountTransactionUpdate) sqlSave(ctx context.Context) (n in
 	}
 	if value, ok := patu.mutation.AddedBalance(); ok {
 		_spec.AddField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
+	}
+	if value, ok := patu.mutation.Description(); ok {
+		_spec.SetField(personalaccounttransaction.FieldDescription, field.TypeString, value)
 	}
 	if value, ok := patu.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)
@@ -355,6 +372,20 @@ func (patuo *PersonalAccountTransactionUpdateOne) SetNillableBalance(f *float32)
 // AddBalance adds f to the "balance" field.
 func (patuo *PersonalAccountTransactionUpdateOne) AddBalance(f float32) *PersonalAccountTransactionUpdateOne {
 	patuo.mutation.AddBalance(f)
+	return patuo
+}
+
+// SetDescription sets the "description" field.
+func (patuo *PersonalAccountTransactionUpdateOne) SetDescription(s string) *PersonalAccountTransactionUpdateOne {
+	patuo.mutation.SetDescription(s)
+	return patuo
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (patuo *PersonalAccountTransactionUpdateOne) SetNillableDescription(s *string) *PersonalAccountTransactionUpdateOne {
+	if s != nil {
+		patuo.SetDescription(*s)
+	}
 	return patuo
 }
 
@@ -512,6 +543,9 @@ func (patuo *PersonalAccountTransactionUpdateOne) sqlSave(ctx context.Context) (
 	}
 	if value, ok := patuo.mutation.AddedBalance(); ok {
 		_spec.AddField(personalaccounttransaction.FieldBalance, field.TypeFloat32, value)
+	}
+	if value, ok := patuo.mutation.Description(); ok {
+		_spec.SetField(personalaccounttransaction.FieldDescription, field.TypeString, value)
 	}
 	if value, ok := patuo.mutation.Status(); ok {
 		_spec.SetField(personalaccounttransaction.FieldStatus, field.TypeString, value)
