@@ -145,64 +145,7 @@ func (p *personalAccountRepository) CalculateInterest() error {
 		return internal_errors.JobAlreadyCompleted
 	}
 
-	//f := func(job *ent.Job) error {
-	//	accounts, err := p.client.Query().
-	//		Select(personalaccount.FieldID, personalaccount.FieldBalance, personalaccount.FieldInterest).
-	//		Order(personalaccount.ByID(sql.OrderAsc())).
-	//		Where(personalaccount.IDGT(job.LastProcessedID), personalaccount.InterestGT(0)).
-	//		Limit(job.Batch).
-	//		All(context.Background())
-	//
-	//	if len(accounts) == 0 {
-	//		job, err = job.Update().SetStatus("COMPLETED").Save(context.Background())
-	//		if err != nil {
-	//			logger.Log.Error(err.Error())
-	//			return internal_errors.JobProcessingFailed
-	//		}
-	//
-	//		return nil
-	//	}
-	//
-	//	_, err = p.txClient.
-	//		MapCreateBulk(accounts, func(c *ent.PersonalAccountTransactionCreate, i int) {
-	//			c.SetAmount(accounts[i].Interest).
-	//				SetAccountID(accounts[i].ID).
-	//				SetType("CREDIT").
-	//				SetDescription("INTEREST").
-	//				SetStatus("COMPLETED")
-	//		}).
-	//		Save(context.Background())
-	//
-	//	updateQuery := fmt.Sprintf(
-	//		`UPDATE personal_accounts SET balance = balance + interest, interest = 0 WHERE id >= %v AND id <= %v AND interest > 0;`,
-	//		accounts[0].ID,
-	//		accounts[len(accounts)-1].ID,
-	//	)
-	//
-	//	_, err = datastore.EntClient.ExecContext(context.Background(), updateQuery)
-	//	if err != nil {
-	//		logger.Log.Error(err.Error())
-	//		return internal_errors.JobProcessingFailed
-	//	}
-	//
-	//	job, err = job.Update().
-	//		SetStatus("PROCESSING").
-	//		SetLastProcessedID(accounts[len(accounts)-1].ID).
-	//		AddTotalProcessed(len(accounts)).
-	//		Save(context.Background())
-	//	if err != nil {
-	//		logger.Log.Error(err.Error())
-	//		return internal_errors.JobProcessingFailed
-	//	}
-	//
-	//	return nil
-	//}
-	//
-	//return p.processJob(job, f)
-
 	return p.batchCalculation(job)
-	//
-	//return nil
 }
 
 func (p *personalAccountRepository) AllocateInterest() error {
