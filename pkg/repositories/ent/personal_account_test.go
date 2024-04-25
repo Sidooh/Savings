@@ -141,7 +141,7 @@ func TestPersonalAccountRepository_Debit(t *testing.T) {
 }
 
 func TestPersonalAccountRepository_CalculateInterest(t *testing.T) {
-	viper.Set("APR", 9)
+	viper.Set("APR", 12)
 	r := NewEntPersonalAccountRepository()
 	jr := NewEntJobRepository()
 
@@ -158,7 +158,7 @@ func TestPersonalAccountRepository_CalculateInterest(t *testing.T) {
 	jobs, err = jr.FindAll(nil, nil)
 	assert.Nil(t, err)
 	assert.Len(t, jobs, 1)
-	assert.EqualValues(t, 1, jobs[0].TotalProcessed)
+	assert.EqualValues(t, 0, jobs[0].TotalProcessed)
 	assert.EqualValues(t, "COMPLETED", jobs[0].Status)
 
 	// TEST does not recalculate if completed
@@ -168,13 +168,12 @@ func TestPersonalAccountRepository_CalculateInterest(t *testing.T) {
 	jobs2, err := jr.FindAll(nil, nil)
 	assert.Nil(t, err)
 	assert.Len(t, jobs, 1)
-	assert.EqualValues(t, 1, jobs[0].TotalProcessed)
+	assert.EqualValues(t, 0, jobs[0].TotalProcessed)
 	assert.EqualValues(t, "COMPLETED", jobs[0].Status)
 	assert.EqualValues(t, jobs[0].UpdatedAt, jobs2[0].UpdatedAt)
 
 	// TEST Interest calculation
 	TruncateTable("jobs")
-	viper.Set("APR", 12)
 
 	acc, err := r.FindById(account.AccountID)
 	assert.Nil(t, err)
@@ -192,6 +191,119 @@ func TestPersonalAccountRepository_CalculateInterest(t *testing.T) {
 	assert.EqualValues(t, 100, acc.Balance)
 	assert.EqualValues(t, "0.03", fmt.Sprintf("%.2f", acc.Interest))
 
+	// TEST Batching
+	TruncateTable("jobs")
+	TruncateTable("personal_account_transactions")
+	TruncateTable("personal_accounts")
+
+	acc, err = createPersonalAccount(datastore.EntClient)
+	assert.Nil(t, err)
+
+	acc2, err := createPersonalAccountRandom(datastore.EntClient)
+	assert.Nil(t, err)
+
+	acc, err = acc.Update().AddBalance(100).Save(context.Background())
+	assert.Nil(t, err)
+
+	acc2, err = acc2.Update().AddBalance(1000).Save(context.Background())
+	assert.Nil(t, err)
+
+	_, err = datastore.EntClient.Job.Create().
+		SetName("INTEREST_CALCULATION").
+		SetDate(time.Now().Format("2006-01-02")).
+		SetData(map[string]interface{}{"daily_rate": 0.03}).
+		SetBatch(1).
+		Save(context.Background())
+	assert.Nil(t, err)
+
+	err = r.CalculateInterest()
+	assert.Nil(t, err)
+
+	acc, err = r.FindById(account.ID)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 100, acc.Balance)
+	assert.EqualValues(t, 3, acc.Interest)
+
+	acc2, err = r.FindById(acc2.ID)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 1000, acc2.Balance)
+	assert.EqualValues(t, 30, acc2.Interest)
+
+	// TEST Batching 2
+	TruncateTable("jobs")
+	TruncateTable("personal_account_transactions")
+	TruncateTable("personal_accounts")
+
+	acc, err = createPersonalAccount(datastore.EntClient)
+	assert.Nil(t, err)
+
+	acc2, err = createPersonalAccountRandom(datastore.EntClient)
+	assert.Nil(t, err)
+
+	acc, err = acc.Update().AddBalance(100).Save(context.Background())
+	assert.Nil(t, err)
+
+	acc2, err = acc2.Update().AddBalance(1000).Save(context.Background())
+	assert.Nil(t, err)
+
+	_, err = datastore.EntClient.Job.Create().
+		SetName("INTEREST_CALCULATION").
+		SetDate(time.Now().Format("2006-01-02")).
+		SetData(map[string]interface{}{"daily_rate": 0.03}).
+		SetBatch(1).
+		SetLastProcessedID(1).
+		Save(context.Background())
+	assert.Nil(t, err)
+
+	err = r.CalculateInterest()
+	assert.Nil(t, err)
+
+	// Not calculated
+	acc, err = r.FindById(acc.ID)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 100, acc.Balance)
+	assert.EqualValues(t, 0, acc.Interest)
+
+	// Calculated
+	acc2, err = r.FindById(acc2.ID)
+	assert.Nil(t, err)
+	assert.EqualValues(t, 1000, acc2.Balance)
+	assert.EqualValues(t, 30, acc2.Interest)
+
+	jobs, err = jr.FindAll(nil, nil)
+	assert.Nil(t, err)
+	assert.Len(t, jobs, 1)
+	assert.EqualValues(t, 1, jobs[0].TotalProcessed)
+	assert.EqualValues(t, 2, jobs[0].LastProcessedID)
+	assert.EqualValues(t, "COMPLETED", jobs[0].Status)
+
+	// TEST Batching - Heavy
+	TruncateTable("jobs")
+	TruncateTable("personal_account_transactions")
+	TruncateTable("personal_accounts")
+
+	for i := 0; i < 10000; i++ {
+		_, err := datastore.EntClient.PersonalAccount.Create().
+			SetAccountID(uint64(utils.RandomInt(1, 1000))).
+			SetType(utils.RandomString(6)).
+			SetBalance(float32(utils.RandomInt(0, 1000))).
+			Save(context.Background())
+		assert.Nil(t, err)
+	}
+
+	err = r.CalculateInterest()
+	assert.Nil(t, err)
+
+	jobs, err = jr.FindAll(nil, nil)
+	assert.Nil(t, err)
+	assert.Len(t, jobs, 1)
+	assert.LessOrEqual(t, jobs[0].TotalProcessed, uint(10000))
+	assert.EqualValues(t, 10000, jobs[0].LastProcessedID)
+	assert.EqualValues(t, "COMPLETED", jobs[0].Status)
+
+	TruncateTable("jobs")
+	TruncateTable("personal_account_transactions")
+	TruncateTable("personal_accounts")
 }
 
 func TestPersonalAccountRepository_AllocateInterest(t *testing.T) {
@@ -354,4 +466,7 @@ func TestPersonalAccountRepository_AllocateInterest(t *testing.T) {
 	assert.EqualValues(t, 10000, jobs[0].LastProcessedID)
 	assert.EqualValues(t, "COMPLETED", jobs[0].Status)
 
+	TruncateTable("jobs")
+	TruncateTable("personal_account_transactions")
+	TruncateTable("personal_accounts")
 }

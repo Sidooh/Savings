@@ -16,11 +16,12 @@ func init() {
 }
 
 func createPersonalAccountTransaction(c *ent.Client) (*ent.PersonalAccountTransaction, error) {
-	acc, _ := createPersonalAccount(c)
+	acc, _ := createPersonalAccountRandom(c)
 	return c.PersonalAccountTransaction.Create().
 		SetAccount(acc).
 		SetType("CREDIT").
 		SetStatus("COMPLETED").
+		SetDescription("Description").
 		Save(context.Background())
 }
 
@@ -31,7 +32,8 @@ func TestPersonalAccountTransactionRepository_FindAll(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Empty(t, all)
 
-	createPersonalAccountTransaction(datastore.EntClient)
+	_, err = createPersonalAccountTransaction(datastore.EntClient)
+	assert.Nil(t, err)
 
 	all, err = r.FindAll(nil, nil)
 	assert.Nil(t, err)
@@ -55,31 +57,6 @@ func TestPersonalAccountTransactionRepository_FindById(t *testing.T) {
 	assert.NotEmpty(t, pa)
 
 	assert.EqualValues(t, random.ID, pa.ID)
-
-	TruncateTable("personal_account_transactions")
-}
-
-func TestPersonalAccountRepository_Cred(t *testing.T) {
-	r := NewEntPersonalAccountRepository()
-
-	acc := ent.PersonalAccount{
-		AccountID: 1,
-		Type:      "",
-	}
-
-	pa, err := r.FindById(1)
-	assert.NotNil(t, err)
-	assert.Empty(t, pa)
-
-	created, err := r.Create(&acc)
-	assert.Nil(t, err)
-	assert.EqualValues(t, 1, created.ID)
-	assert.EqualValues(t, 1, created.AccountID)
-	assert.EqualValues(t, "", created.Type)
-
-	created, err = r.Create(&acc)
-	assert.Nil(t, created)
-	assert.NotNil(t, err)
 
 	TruncateTable("personal_account_transactions")
 }

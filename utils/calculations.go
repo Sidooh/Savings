@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-func GetDailyInterestRate() float32 {
+func GetDailyInterestRate() float64 {
 	apr := viper.GetFloat64("APR")
 
-	return float32(apr / 100 / float64(daysInYear()))
+	return apr / 100 / float64(daysInYear())
 }
 
 func daysInYear() int {
