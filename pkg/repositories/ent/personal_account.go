@@ -145,7 +145,11 @@ func (p *personalAccountRepository) CalculateInterest() error {
 		return internal_errors.JobAlreadyCompleted
 	}
 
-	return p.batchCalculation(job)
+	err = p.batchCalculation(job)
+
+	// TODO: Notify
+
+	return err
 }
 
 func (p *personalAccountRepository) AllocateInterest() error {
@@ -167,7 +171,11 @@ func (p *personalAccountRepository) AllocateInterest() error {
 		return internal_errors.JobAlreadyCompleted
 	}
 
-	return p.batchAllocation(job)
+	err = p.batchAllocation(job)
+
+	// TODO: Notify
+
+	return err
 }
 
 func (p *personalAccountRepository) batchAllocation(job *ent.Job) error {
