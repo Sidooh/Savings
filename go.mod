@@ -6,8 +6,9 @@ require (
 	entgo.io/ent v0.13.1
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/go-sql-driver/mysql v1.8.0
-	github.com/gofiber/fiber/v2 v2.52.2
+	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/jellydator/ttlcache/v3 v3.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/spf13/viper v1.18.2
@@ -30,7 +31,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
-	github.com/jellydator/ttlcache/v3 v3.2.0 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
